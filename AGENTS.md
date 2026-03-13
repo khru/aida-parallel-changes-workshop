@@ -62,6 +62,16 @@ git checkout -b team-x-solution
 - prioridad a tests sociables desde endpoint hacia abajo
 - usar dobles de test solo cuando reduzcan acoplamiento tecnico
 
+## Test quality rules
+
+- los tests verifican comportamiento observable de la aplicacion
+- evitar tests que validen estructura interna o detalles de implementacion
+- evitar assertions fragiles basadas en substrings de JSON
+- validar payloads JSON parseando el documento y comprobando datos semanticos
+- aplicar FIRST en toda la suite
+- usar tests solitarios solo para value objects puros y reglas invariantes
+- cualquier test que falle de forma no determinista debe corregirse o eliminarse
+
 ## TDD guided by zombies and triangulation
 
 Secuencia recomendada:
@@ -94,6 +104,7 @@ Para smoke local con contenedores:
 - no mezclar cambios de fases distintas
 - cada commit debe dejar el repo en verde
 - la rama `contract` nunca conserva codigo transicional sin uso
+- evitar commits de merge en ramas del workshop
 
 ## Documentation policy
 
