@@ -4,7 +4,7 @@ using Aida.ParallelChange.Api.Ports;
 
 namespace Aida.ParallelChange.Api.Infrastructure.InMemory;
 
-public sealed class InMemoryCustomerContactRepository : CustomerContactReader
+public sealed class InMemoryCustomerContactRepository : CustomerContactReader, CustomerContactWriter
 {
     private readonly ConcurrentDictionary<int, CustomerContact> _records = new();
 
@@ -23,7 +23,7 @@ public sealed class InMemoryCustomerContactRepository : CustomerContactReader
         return Task.FromResult(contact);
     }
 
-    public Task SaveAsync(CustomerContact customerContact, CancellationToken cancellationToken = default)
+    public Task UpsertAsync(CustomerContact customerContact, CancellationToken cancellationToken = default)
     {
         _records[customerContact.CustomerId.Value] = customerContact;
         return Task.CompletedTask;
