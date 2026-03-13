@@ -1,13 +1,14 @@
 using Aida.ParallelChange.Api.Application.GetCustomerContact;
 using Aida.ParallelChange.Api.Application.UpdateCustomerContact;
-using Aida.ParallelChange.Api.Infrastructure.InMemory;
+using Aida.ParallelChange.Api.Infrastructure.Persistence.SqlServer;
 using Aida.ParallelChange.Api.Ports;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddSingleton<InMemoryCustomerContactRepository>();
-builder.Services.AddSingleton<CustomerContactReader>(sp => sp.GetRequiredService<InMemoryCustomerContactRepository>());
-builder.Services.AddSingleton<CustomerContactWriter>(sp => sp.GetRequiredService<InMemoryCustomerContactRepository>());
+builder.Services.AddSingleton(sp => new DatabaseConnectionFactory(builder.Configuration.GetConnectionString("SqlServer")!));
+builder.Services.AddScoped<SqlServerCustomerContactRepository>();
+builder.Services.AddScoped<CustomerContactReader>(sp => sp.GetRequiredService<SqlServerCustomerContactRepository>());
+builder.Services.AddScoped<CustomerContactWriter>(sp => sp.GetRequiredService<SqlServerCustomerContactRepository>());
 builder.Services.AddScoped<GetCustomerContactHandler>();
 builder.Services.AddScoped<UpdateCustomerContactHandler>();
 builder.Services.AddControllers();
