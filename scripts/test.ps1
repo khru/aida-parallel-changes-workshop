@@ -1,1 +1,1 @@
-dotnet test Aida.ParallelChange.sln
+dotnet test Aida.ParallelChange.sln -c Release

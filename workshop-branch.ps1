@@ -19,7 +19,7 @@ function Get-CurrentBranch {
 }
 
 function Ensure-Clean {
-    $status = git status --porcelain
+    $status = git -c core.filemode=false status --porcelain
     if ($status) {
         throw 'Working tree is not clean. Commit or stash your changes before switching branches.'
     }
@@ -110,6 +110,7 @@ function Show-Usage {
     Write-Host 'Usage:'
     Write-Host '  .\workshop-branch.ps1                 Open interactive mode'
     Write-Host '  .\workshop-branch.ps1 list            Show workshop branches'
+    Write-Host '  .\workshop-branch.ps1 branches        Show workshop branches'
     Write-Host '  .\workshop-branch.ps1 next            Checkout the next workshop branch'
     Write-Host '  .\workshop-branch.ps1 prev            Checkout the previous workshop branch'
     Write-Host '  .\workshop-branch.ps1 goto migrate    Checkout a specific workshop branch'
@@ -187,6 +188,11 @@ if (-not $PSBoundParameters.ContainsKey('Command')) {
 }
 
 if ($Command -eq 'list') {
+    Show-Branches
+    return
+}
+
+if ($Command -eq 'branches') {
     Show-Branches
     return
 }

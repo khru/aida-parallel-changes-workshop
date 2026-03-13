@@ -1,5 +1,5 @@
 ### Update customer contact v1
-PUT http://localhost:8080/api/v1/customer-contacts/42
+PUT {{host}}/api/v1/customer-contacts/42
 Content-Type: application/vnd.api+json
 Accept: application/vnd.api+json
 

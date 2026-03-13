@@ -4,11 +4,11 @@ services:
     container_name: aida-parallel-change-sqlserver
     environment:
       ACCEPT_EULA: "Y"
-      MSSQL_SA_PASSWORD: "Your_strong_password_123"
+      MSSQL_SA_PASSWORD: "${AIDA_SQL_PASSWORD:-Your_strong_password_123}"
     ports:
-      - "14333:1433"
+      - "${AIDA_SQL_PORT:-14333}:1433"
     healthcheck:
-      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P Your_strong_password_123 -Q 'SELECT 1' -C || exit 1"]
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U ${AIDA_SQL_USER:-sa} -P ${AIDA_SQL_PASSWORD:-Your_strong_password_123} -Q \"SELECT 1\" -C || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 20
@@ -23,12 +23,12 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
-      ConnectionStrings__SqlServer: Server=sqlserver,1433;Database=AidaParallelChange;User Id=sa;Password=Your_strong_password_123;TrustServerCertificate=true;Encrypt=false
+      ConnectionStrings__SqlServer: "Server=sqlserver,1433;Database=${AIDA_SQL_DATABASE:-AidaParallelChange};User Id=${AIDA_SQL_USER:-sa};Password=${AIDA_SQL_PASSWORD:-Your_strong_password_123};TrustServerCertificate=true;Encrypt=false"
     depends_on:
       sqlserver:
         condition: service_healthy
     ports:
-      - "8080:8080"
+      - "${AIDA_API_PORT:-8080}:8080"
 
   migrator:
     build:
@@ -36,7 +36,7 @@ services:
       dockerfile: docker/migrations/Dockerfile
     container_name: aida-parallel-change-migrator
     environment:
-      ConnectionStrings__SqlServer: Server=sqlserver,1433;Database=AidaParallelChange;User Id=sa;Password=Your_strong_password_123;TrustServerCertificate=true;Encrypt=false
+      ConnectionStrings__SqlServer: "Server=sqlserver,1433;Database=${AIDA_SQL_DATABASE:-AidaParallelChange};User Id=${AIDA_SQL_USER:-sa};Password=${AIDA_SQL_PASSWORD:-Your_strong_password_123};TrustServerCertificate=true;Encrypt=false"
     depends_on:
       sqlserver:
         condition: service_healthy

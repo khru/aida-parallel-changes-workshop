@@ -1,27 +1,57 @@
 # Facilitation
 
-## Opening
+## Session objective
 
-Start by framing the fear as rational.
+Guide participants to evolve an API contract without breaking unknown consumers while preserving delivery speed.
 
-A small shape change becomes dangerous when consumers are unknown and the system is always on.
+## Suggested timeline
+
+- 15 minutes: context and guardrails
+- 60 minutes: guided implementation
+- 15 minutes: debrief and architecture review
+
+## Recommended team setup
+
+- Teams of 2 or 3 people
+- Rotate driver and navigator every 15 minutes
+- Navigator enforces test quality and branch discipline
 
 ## Teaching sequence
 
-1. Show the legacy endpoint working.
-2. Explain why a direct breaking change is unsafe.
-3. Introduce expand.
-4. Introduce migrate.
-5. Close with contract and why teams often skip it.
+1. Run `workshop/initial-state` and prove baseline behavior.
+2. Explain why direct breaking migration is risky.
+3. Move to `workshop/expand` and show coexistence.
+4. Move to `workshop/migrate` and show controlled data migration.
+5. Move to `workshop/contract` and remove transitional debt.
 
-## Pairing guidance
+## Facilitation checkpoints
 
-Ask each group to work in pairs or trios.
+### Checkpoint 1
 
-Encourage one person to drive and one person to watch the tests and naming.
+Participants can explain legacy contract behavior and test coverage.
 
-## What to emphasise
+### Checkpoint 2
 
-- every step must keep trunk releasable
-- temporary code is real work and must be deleted later
-- contract is not optional cleanup
+Participants can explain why coexistence and dual-write are temporary but necessary.
+
+### Checkpoint 3
+
+Participants can run backfill and explain rollback limitations.
+
+### Checkpoint 4
+
+Participants can justify contract phase deletion decisions.
+
+## Quality guardrails during the session
+
+- One failing test at a time.
+- Failure must be for the intended reason.
+- No progression with red tests.
+- Keep branch history coherent and focused.
+
+## Debrief prompts
+
+- Where is the point of no easy return in your solution?
+- What decision gave the highest safety gain?
+- Which transitional code was hardest to delete and why?
+- Which validation step gave the highest confidence?

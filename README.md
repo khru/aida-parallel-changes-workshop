@@ -1,89 +1,212 @@
 # AIDA Parallel Change Workshop
 
-This repository contains a hands-on workshop for teaching parallel change in a .NET 10 HTTP API.
+This repository is a hands-on workshop to practice safe contract and data evolution in a .NET 10 HTTP API with unknown consumers.
 
-## Scenario
+The workshop follows a strict parallel change journey:
 
-The starting API exposes a legacy customer contact resource.
+1. `workshop/initial-state`
+2. `workshop/expand`
+3. `workshop/migrate`
+4. `workshop/contract`
 
-`GET /api/v1/customer-contacts/{customerId}` returns a flat contract with `contactName`, `phone`, and `email`.
+This README belongs to `workshop/initial-state`.
 
-The target contract is structured. The system must evolve without breaking unknown consumers.
+## What participants build
 
-## Branches
+The initial contract is a legacy flat JSON:API payload for customer contact data:
 
-- `main`
-- `workshop/initial-state`
-- `workshop/expand`
-- `workshop/migrate`
-- `workshop/contract`
+- `contactName`
+- `phone`
+- `email`
 
-## How participants start
+The final target is a structured contract introduced safely in later branches.
 
-All participants must create their own working branch from `workshop/initial-state` before they begin the hands-on exercise.
-
-The branch name is up to each group.
-
-Example:
+## Participant setup
 
 ```bash
 git checkout workshop/initial-state
-git checkout -b team-1-solution
+git checkout -b team-x-solution
 ```
 
-Do not ask participants to work directly on `workshop/expand`, `workshop/migrate`, or `workshop/contract`.
+## Runtime commands
 
-## Facilitator walkthrough
-
-Use one of these helper scripts from the project root:
-
-- `./workshop-branch.sh`
-- `./workshop-branch.ps1`
-
-They let the facilitator move through the workshop branches in order and use the repository as a step-by-step resolution.
-
-## Documentation map
-
-- `INSTRUCTIONS.md`: contexto de negocio y objetivos del ejercicio
-- `DOCUMENTATION.md`: teoria y tecnica de parallel change aplicada al repo
-- `FACILITATION.md`: guia de facilitacion para la sesion
-- `AGENTS.md`: reglas de contribucion y calidad para agentes y colaboradores
-- `adr/ADR-00X.md`: decisiones de arquitectura
-
-## Current branch snapshot
-
-This branch represents: the initial live system before parallel change begins
-
-It contains the legacy `v1` contract, the initial SQL Server schema, and the starting point for all participants.
-
-## Tooling
-
-- .NET 10
-- ASP.NET Core controllers
-- OpenAPI
-- JSON:API media type
-- SQL Server
-- Dapper
-- FluentMigrator
-- NUnit
-- NSubstitute
-- Shouldly
-- AwesomeAssertions
-- JetBrains HTTP Client CLI
-
-## Quick start
+Linux or macOS:
 
 ```bash
 ./scripts/up.sh
-./scripts/migrate.sh
-./scripts/test.sh
 ./scripts/smoke.sh
+./scripts/down.sh
 ```
 
-## Verification
+Windows PowerShell:
+
+```powershell
+pwsh ./scripts/up.ps1
+pwsh ./scripts/smoke.ps1
+pwsh ./scripts/down.ps1
+```
+
+## Quality commands
 
 ```bash
+./scripts/test.sh
 ./scripts/verify.sh
 ```
 
-Use `scripts/verify.ps1` on Windows PowerShell.
+## Branch navigation
+
+```bash
+./workshop-branch.sh list
+./workshop-branch.sh goto expand
+./workshop-branch.sh next
+```
+
+```powershell
+./workshop-branch.ps1 list
+./workshop-branch.ps1 goto migrate
+./workshop-branch.ps1 next
+```
+
+## Additional automation scripts
+
+- `scripts/test-watch.sh` and `scripts/test-watch.ps1`
+- `scripts/god-mode.sh` and `scripts/god-mode.ps1`
+- `scripts/workshop-replay.sh` and `scripts/workshop-replay.ps1`
+- `scripts/verify-history.sh` and `scripts/verify-history.ps1`
+- `scripts/clean-docker.sh` and `scripts/clean-docker.ps1`
+
+## HTTP requests used as executable docs
+
+- `http/v1/get-customer-contact.http`
+- `http/v1/update-customer-contact.http`
+- `http/environments/local.http-client.env.json`
+
+## Documentation map
+
+- `docs/INSTRUCTIONS.md`
+- `docs/DOCUMENTATION.md`
+- `docs/FACILITATION.md`
+- `docs/adr/ADR-001.md`
+- `docs/adr/ADR-002.md`
+- `docs/adr/ADR-003.md`
+- `AGENTS.md`
+
+## Architecture Overview
+
+```mermaid
+flowchart LR
+  Consumer[External Consumer] --> Api[ASP.NET Core API v1]
+  Api --> App[Application Handlers]
+  App --> PortRead[CustomerContactReader]
+  App --> PortWrite[CustomerContactWriter]
+  PortRead --> Repo[SQL Server Repository]
+  PortWrite --> Repo
+  Repo --> Sql[(SQL Server)]
+  Migrator[FluentMigrator Runner] --> Sql
+```
+
+## Use Cases
+
+```mermaid
+flowchart TD
+  Facilitator --> Demo[Demonstrate safe evolution path]
+  Participant --> GetV1[Read customer contact via v1]
+  Participant --> PutV1[Update customer contact via v1]
+  Participant --> RunQuality[Run tests and smoke checks]
+  RunQuality --> Confidence[Preserve compatibility confidence]
+```
+
+## C4 Level 1
+
+```mermaid
+flowchart LR
+  User[API Consumer] --> System[AIDA Parallel Change Workshop System]
+  Facilitator[Workshop Facilitator] --> System
+```
+
+## C4 Level 2
+
+```mermaid
+flowchart LR
+  User[API Consumer] --> ApiContainer[API Container]
+  Facilitator[Facilitator] --> Scripts[Automation Scripts]
+  Scripts --> ApiContainer
+  ApiContainer --> SqlContainer[SQL Server Container]
+  MigratorContainer[Migrator Container] --> SqlContainer
+```
+
+## C4 Level 3
+
+```mermaid
+flowchart TB
+  Controller[V1 Controller] --> GetHandler[GetCustomerContactHandler]
+  Controller --> UpdateHandler[UpdateCustomerContactHandler]
+  GetHandler --> ReaderPort[CustomerContactReader]
+  UpdateHandler --> WriterPort[CustomerContactWriter]
+  ReaderPort --> SqlRepo[SqlServerCustomerContactRepository]
+  WriterPort --> SqlRepo
+  SqlRepo --> Sql[(SQL Server)]
+```
+
+## C4 Level 4
+
+```mermaid
+flowchart LR
+  GetEndpoint[GET /api/v1/customer-contacts/{id}] --> GetQuery[GetCustomerContactQuery]
+  PutEndpoint[PUT /api/v1/customer-contacts/{id}] --> UpdateCommand[UpdateCustomerContactCommand]
+  GetQuery --> Domain[CustomerContact Domain Model]
+  UpdateCommand --> Domain
+  Domain --> SqlMapper[SQL Mapper]
+  SqlMapper --> Sql[(customer_contacts)]
+```
+
+## Endpoint Sequences
+
+### GET v1
+
+```mermaid
+sequenceDiagram
+  participant C as Client
+  participant A as API v1 Controller
+  participant H as Get Handler
+  participant R as SQL Repository
+  participant D as SQL Server
+  C->>A: GET /api/v1/customer-contacts/42
+  A->>H: Handle query
+  H->>R: Read customer contact
+  R->>D: SELECT legacy columns
+  D-->>R: Row
+  R-->>H: Domain contact
+  H-->>A: Domain contact
+  A-->>C: 200 JSON:API v1 document
+```
+
+### PUT v1
+
+```mermaid
+sequenceDiagram
+  participant C as Client
+  participant A as API v1 Controller
+  participant H as Update Handler
+  participant R as SQL Repository
+  participant D as SQL Server
+  C->>A: PUT /api/v1/customer-contacts/42
+  A->>H: Handle command
+  H->>R: Upsert customer contact
+  R->>D: UPDATE legacy columns
+  D-->>R: Ack
+  R-->>H: Done
+  H-->>A: Done
+  A-->>C: 204 No Content
+```
+
+## Validation baseline
+
+```bash
+dotnet restore Aida.ParallelChange.sln
+dotnet build Aida.ParallelChange.sln -c Release
+dotnet test Aida.ParallelChange.sln -c Release
+./scripts/up.sh
+./scripts/smoke.sh
+./scripts/down.sh
+```

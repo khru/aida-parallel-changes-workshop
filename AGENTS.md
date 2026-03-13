@@ -2,13 +2,13 @@
 
 ## Purpose
 
-Este archivo define como contribuir en este workshop de parallel change para AIDA.
+This file defines how contributors and coding agents work in this parallel change workshop.
 
 ## Product context
 
-- API HTTP en .NET con consumidores no controlados
-- no se permite romper compatibilidad en produccion
-- el ejercicio enseña evolucion segura de contratos y datos
+- The API is public and consumers are not fully controlled.
+- Production compatibility cannot break.
+- The workshop teaches safe contract and data evolution.
 
 ## Technical stack
 
@@ -19,22 +19,22 @@ Este archivo define como contribuir en este workshop de parallel change para AID
 - FluentMigrator
 - NUnit
 - NSubstitute
-- Shouldly y AwesomeAssertions
+- Shouldly and AwesomeAssertions
 - OpenAPI
 - JSON:API media type
-- Docker y docker compose
+- Docker and Docker Compose
 - JetBrains HTTP Client CLI
 
 ## Branch workflow
 
-Ramas del workshop:
+Workshop branches:
 
 1. `workshop/initial-state`
 2. `workshop/expand`
 3. `workshop/migrate`
 4. `workshop/contract`
 
-Flujo para alumnado:
+Participant flow:
 
 ```bash
 git checkout workshop/initial-state
@@ -43,77 +43,62 @@ git checkout -b team-x-solution
 
 ## Development rules
 
-- codigo sin comentarios
-- nombres que revelan intencion
-- separacion de responsabilidades
-- SOLID
-- inversion de dependencias e inversion de control
-- encapsulacion e inmutabilidad cuando aplica
-- evitar switch statements
-- evitar magic strings y magic numbers
-- evitar Entity Framework en este repositorio
+- Keep code without comments.
+- Use intention-revealing names.
+- Keep clear separation of responsibilities.
+- Apply SOLID principles.
+- Apply dependency inversion and inversion of control.
+- Favor encapsulation and immutability when useful.
+- Avoid switch statements.
+- Avoid magic strings and magic numbers.
+- Do not use Entity Framework in this repository.
 
-## Testing rules
+## TDD rules
 
-- TDD con ciclos pequenos
-- un test rojo por vez
-- minima implementacion para verde
-- refactor inmediato
-- prioridad a tests sociables desde endpoint hacia abajo
-- usar dobles de test solo cuando reduzcan acoplamiento tecnico
+- Introduce exactly one failing test at a time.
+- A failing test must fail for the right business reason.
+- Implement the smallest change to make the test pass.
+- Refactor immediately after green.
+- Prioritize sociable tests from endpoint downward.
+- Use test doubles only to reduce technical coupling.
 
 ## Test quality rules
 
-- los tests verifican comportamiento observable de la aplicacion
-- evitar tests que validen estructura interna o detalles de implementacion
-- evitar assertions fragiles basadas en substrings de JSON
-- validar payloads JSON parseando el documento y comprobando datos semanticos
-- aplicar FIRST en toda la suite
-- usar tests solitarios solo para value objects puros y reglas invariantes
-- cualquier test que falle de forma no determinista debe corregirse o eliminarse
+- Tests must verify observable behavior.
+- Avoid assertions against internal structure or implementation details.
+- Avoid fragile JSON substring assertions.
+- Parse JSON payloads and assert semantic values.
+- Enforce FIRST across the suite.
+- Keep solitary tests only for pure value objects and invariants.
+- Fix or remove non-deterministic tests.
 
-## TDD guided by zombies and triangulation
+## Test time budget
 
-Secuencia recomendada:
+- The fast local suite must complete in 45 seconds or less.
+- If the suite exceeds 45 seconds, optimization is mandatory before continuing.
 
-1. fake it hasta obtener primer verde
-2. obvio cuando el comportamiento es directo
-3. triangulacion al aparecer un segundo ejemplo que fuerce generalizacion
-
-Cada nuevo caso se introduce cuando aporta una razon nueva para fallar.
-
-## Quality gates before commit
+## Quality gates before moving forward
 
 ```bash
 dotnet restore Aida.ParallelChange.sln
 dotnet build Aida.ParallelChange.sln -c Release
 dotnet test Aida.ParallelChange.sln -c Release
-```
-
-Para smoke local con contenedores:
-
-```bash
 ./scripts/up.sh
-./scripts/migrate.sh
 ./scripts/smoke.sh
+./scripts/down.sh
 ```
 
 ## Commit policy
 
-- commits pequenos y con intencion clara
-- no mezclar cambios de fases distintas
-- cada commit debe dejar el repo en verde
-- la rama `contract` nunca conserva codigo transicional sin uso
-- evitar commits de merge en ramas del workshop
+- Keep commits small and intentional.
+- Do not mix different workshop phases in one commit.
+- Every commit must leave the repository green.
+- `workshop/contract` must not keep unused transitional code.
+- Avoid merge commits in workshop branches.
 
 ## Documentation policy
 
-Mantener actualizados:
-
-- `README.md`
-- `INSTRUCTIONS.md`
-- `DOCUMENTATION.md`
-- `FACILITATION.md`
-- `adr/ADR-00X.md`
-
-Cuando cambie una decision de arquitectura, crear un ADR nuevo en lugar de sobrescribir el anterior.
+- Keep `README.md` current with runnable instructions and branch-specific diagrams.
+- Keep `docs/INSTRUCTIONS.md`, `docs/DOCUMENTATION.md`, and `docs/FACILITATION.md` current.
+- Keep ADRs in `docs/adr` current.
+- Create a new ADR when architecture decisions change.

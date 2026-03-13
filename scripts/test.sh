@@ -1,1 +1,4 @@
-dotnet test Aida.ParallelChange.sln
+#!/usr/bin/env bash
+set -euo pipefail
+
+dotnet test Aida.ParallelChange.sln -c Release

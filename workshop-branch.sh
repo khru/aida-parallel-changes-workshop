@@ -21,7 +21,7 @@ current_branch() {
 }
 
 ensure_clean() {
-  if [[ -n "$(git status --porcelain)" ]]; then
+  if [[ -n "$(git -c core.filemode=false status --porcelain)" ]]; then
     echo "Working tree is not clean. Commit or stash your changes before switching branches." >&2
     exit 1
   fi
@@ -188,6 +188,7 @@ usage() {
 Usage:
   ./workshop-branch.sh               Open interactive mode
   ./workshop-branch.sh list          Show workshop branches
+  ./workshop-branch.sh branches      Show workshop branches
   ./workshop-branch.sh next          Checkout the next workshop branch
   ./workshop-branch.sh prev          Checkout the previous workshop branch
   ./workshop-branch.sh goto expand   Checkout a specific workshop branch
@@ -199,6 +200,11 @@ if [[ $# -eq 0 ]]; then
 fi
 
 if [[ "$1" == "list" ]]; then
+  print_branches
+  exit 0
+fi
+
+if [[ "$1" == "branches" ]]; then
   print_branches
   exit 0
 fi
