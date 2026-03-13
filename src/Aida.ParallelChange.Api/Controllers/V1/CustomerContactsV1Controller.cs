@@ -1,6 +1,7 @@
+using Aida.ParallelChange.Api.Application.GetCustomerContact;
 using Aida.ParallelChange.Api.Contracts.JsonApi;
 using Aida.ParallelChange.Api.Contracts.V1;
-using Aida.ParallelChange.Api.Infrastructure.InMemory;
+using Aida.ParallelChange.Api.Domain;
 using Aida.ParallelChange.Api.JsonApi;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,20 +11,20 @@ namespace Aida.ParallelChange.Api.Controllers.V1;
 [Route("api/v1/customer-contacts")]
 public sealed class CustomerContactsV1Controller : ControllerBase
 {
-    private readonly LegacyCustomerContactStore _store;
+    private readonly GetCustomerContactHandler _handler;
 
-    public CustomerContactsV1Controller(LegacyCustomerContactStore store)
+    public CustomerContactsV1Controller(GetCustomerContactHandler handler)
     {
-        _store = store;
+        _handler = handler;
     }
 
     [HttpGet("{customerId:int}")]
     [Produces(JsonApiMediaTypes.JsonApi)]
-    public ActionResult<CustomerContactV1Document> Get(int customerId)
+    public async Task<ActionResult<CustomerContactV1Document>> Get(int customerId, CancellationToken cancellationToken)
     {
-        var record = _store.FindById(customerId);
+        var contact = await _handler.HandleAsync(new GetCustomerContactQuery(new CustomerId(customerId)), cancellationToken);
 
-        if (record is null)
+        if (contact is null)
         {
             return NotFound();
         }
@@ -33,12 +34,12 @@ public sealed class CustomerContactsV1Controller : ControllerBase
             Data = new JsonApiResource<CustomerContactV1Attributes>
             {
                 Type = "customer-contacts",
-                Id = record.CustomerId.ToString(),
+                Id = contact.CustomerId.Value.ToString(),
                 Attributes = new CustomerContactV1Attributes
                 {
-                    ContactName = record.ContactName,
-                    Phone = record.Phone,
-                    Email = record.Email
+                    ContactName = contact.ContactName,
+                    Phone = contact.Phone,
+                    Email = contact.Email.Value
                 }
             }
         };
