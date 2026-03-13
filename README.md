@@ -9,7 +9,7 @@ The workshop follows a strict parallel change journey:
 3. `workshop/migrate`
 4. `workshop/contract`
 
-This README belongs to `workshop/initial-state`.
+This README belongs to `main`.
 
 ## What participants build
 
@@ -21,12 +21,14 @@ The initial contract is a legacy flat JSON:API payload for customer contact data
 
 The final target is a structured contract introduced safely in later branches.
 
-## Participant setup
+## Workshop branch setup
 
 ```bash
 git checkout workshop/initial-state
 git checkout -b team-x-solution
 ```
+
+`main` keeps the shared baseline tooling and documentation used by every workshop branch.
 
 ## Runtime commands
 
