@@ -8,13 +8,13 @@ public readonly record struct CustomerId
 
     public int Value { get; }
 
-    public CustomerId(int value)
+    public CustomerId(int customerId)
     {
-        if (value < MinimumValue)
+        if (customerId < MinimumValue)
         {
-            throw new ArgumentOutOfRangeException(nameof(value), ValueMustBeGreaterThanZeroMessage);
+            throw new ArgumentOutOfRangeException(nameof(customerId), ValueMustBeGreaterThanZeroMessage);
         }
 
-        Value = value;
+        Value = customerId;
     }
 }

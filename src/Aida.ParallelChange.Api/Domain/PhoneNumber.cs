@@ -1,6 +1,6 @@
 namespace Aida.ParallelChange.Api.Domain;
 
-public sealed class PhoneNumber
+public sealed record PhoneNumber
 {
     private const int MaximumLength = 30;
 
@@ -9,20 +9,20 @@ public sealed class PhoneNumber
 
     public string Value { get; }
 
-    public PhoneNumber(string value)
+    public PhoneNumber(string phoneNumber)
     {
-        if (string.IsNullOrWhiteSpace(value))
+        var normalizedPhoneNumber = phoneNumber?.Trim();
+
+        if (string.IsNullOrWhiteSpace(normalizedPhoneNumber))
         {
-            throw new ArgumentException(ValueIsRequiredMessage, nameof(value));
+            throw new ArgumentException(ValueIsRequiredMessage, nameof(phoneNumber));
         }
 
-        var trimmedValue = value.Trim();
-
-        if (trimmedValue.Length > MaximumLength)
+        if (normalizedPhoneNumber.Length > MaximumLength)
         {
-            throw new ArgumentException(ValueIsInvalidMessage, nameof(value));
+            throw new ArgumentException(ValueIsInvalidMessage, nameof(phoneNumber));
         }
 
-        Value = trimmedValue;
+        Value = normalizedPhoneNumber;
     }
 }

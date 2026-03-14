@@ -10,16 +10,16 @@ public sealed class ContactNameTests
     {
         var name = new ContactName("  Ada Lovelace  ");
 
-        name.Value.ShouldBe("Ada Lovelace");
+        name.ShouldBe(new ContactName("Ada Lovelace"));
     }
 
     [TestCase("")]
     [TestCase("   ")]
-    public void Constructor_throws_when_name_is_blank(string value)
+    public void Constructor_throws_when_name_is_blank(string contactName)
     {
-        var exception = Should.Throw<ArgumentException>(() => new ContactName(value));
+        var exception = Should.Throw<ArgumentException>(() => new ContactName(contactName));
 
-        exception.ParamName.ShouldBe("value");
+        exception.ParamName.ShouldBe("contactName");
         exception.Message.ShouldStartWith("Contact name is required.");
     }
 }

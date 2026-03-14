@@ -11,7 +11,7 @@ public sealed class CustomerIdTests
     {
         var customerId = new CustomerId(value);
 
-        customerId.Value.ShouldBe(value);
+        customerId.ShouldBe(new CustomerId(value));
     }
 
     [TestCase(0)]
@@ -20,7 +20,7 @@ public sealed class CustomerIdTests
     {
         var exception = Should.Throw<ArgumentOutOfRangeException>(() => new CustomerId(value));
 
-        exception.ParamName.ShouldBe("value");
+        exception.ParamName.ShouldBe("customerId");
         exception.Message.ShouldStartWith("Customer id must be greater than zero.");
     }
 }

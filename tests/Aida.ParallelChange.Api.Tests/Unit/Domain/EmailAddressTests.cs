@@ -10,17 +10,17 @@ public sealed class EmailAddressTests
     {
         var email = new EmailAddress("  ada@example.com  ");
 
-        email.Value.ShouldBe("ada@example.com");
+        email.ShouldBe(new EmailAddress("ada@example.com"));
     }
 
     [TestCase("")]
     [TestCase("   ")]
     [TestCase("invalid-email")]
-    public void Constructor_throws_when_email_is_invalid(string value)
+    public void Constructor_throws_when_email_is_invalid(string emailAddress)
     {
-        var exception = Should.Throw<ArgumentException>(() => new EmailAddress(value));
+        var exception = Should.Throw<ArgumentException>(() => new EmailAddress(emailAddress));
 
-        exception.ParamName.ShouldBe("value");
+        exception.ParamName.ShouldBe("emailAddress");
         exception.Message.ShouldStartWith("Email address is invalid.");
     }
 
@@ -29,7 +29,7 @@ public sealed class EmailAddressTests
     {
         var exception = Should.Throw<ArgumentException>(() => new EmailAddress(null!));
 
-        exception.ParamName.ShouldBe("value");
+        exception.ParamName.ShouldBe("emailAddress");
         exception.Message.ShouldStartWith("Email address is invalid.");
     }
 }

@@ -10,37 +10,37 @@ public sealed class PhoneNumberTests
     {
         var phone = new PhoneNumber("  +44 123456789  ");
 
-        phone.Value.ShouldBe("+44 123456789");
+        phone.ShouldBe(new PhoneNumber("+44 123456789"));
     }
 
     [TestCase("")]
     [TestCase("   ")]
-    public void Constructor_throws_when_phone_is_blank(string value)
+    public void Constructor_throws_when_phone_is_blank(string phoneNumber)
     {
-        var exception = Should.Throw<ArgumentException>(() => new PhoneNumber(value));
+        var exception = Should.Throw<ArgumentException>(() => new PhoneNumber(phoneNumber));
 
-        exception.ParamName.ShouldBe("value");
+        exception.ParamName.ShouldBe("phoneNumber");
         exception.Message.ShouldStartWith("Phone number is required.");
     }
 
     [Test]
     public void Constructor_accepts_phone_with_exactly_30_characters()
     {
-        var value = new string('1', 30);
+        var phoneNumber = new string('1', 30);
 
-        var phone = new PhoneNumber(value);
+        var phone = new PhoneNumber(phoneNumber);
 
-        phone.Value.ShouldBe(value);
+        phone.ShouldBe(new PhoneNumber(phoneNumber));
     }
 
     [Test]
     public void Constructor_throws_when_phone_is_too_long()
     {
-        var value = new string('1', 31);
+        var phoneNumber = new string('1', 31);
 
-        var exception = Should.Throw<ArgumentException>(() => new PhoneNumber(value));
+        var exception = Should.Throw<ArgumentException>(() => new PhoneNumber(phoneNumber));
 
-        exception.ParamName.ShouldBe("value");
+        exception.ParamName.ShouldBe("phoneNumber");
         exception.Message.ShouldStartWith("Phone number is invalid.");
     }
 }

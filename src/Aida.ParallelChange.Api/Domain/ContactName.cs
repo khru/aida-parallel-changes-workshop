@@ -1,18 +1,20 @@
 namespace Aida.ParallelChange.Api.Domain;
 
-public sealed class ContactName
+public sealed record ContactName
 {
     private const string NameIsRequiredMessage = "Contact name is required.";
 
     public string Value { get; }
 
-    public ContactName(string value)
+    public ContactName(string contactName)
     {
-        if (string.IsNullOrWhiteSpace(value))
+        var normalizedContactName = contactName?.Trim();
+
+        if (string.IsNullOrWhiteSpace(normalizedContactName))
         {
-            throw new ArgumentException(NameIsRequiredMessage, nameof(value));
+            throw new ArgumentException(NameIsRequiredMessage, nameof(contactName));
         }
 
-        Value = value.Trim();
+        Value = normalizedContactName;
     }
 }

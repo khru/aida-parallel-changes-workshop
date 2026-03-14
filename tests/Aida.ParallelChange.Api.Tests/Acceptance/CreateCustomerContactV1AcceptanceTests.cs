@@ -58,7 +58,7 @@ public sealed class CreateCustomerContactV1AcceptanceTests : SeededCustomerConta
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
         error.GetProperty("status").GetString().ShouldBe("400");
         error.GetProperty("title").GetString().ShouldBe("Invalid request");
-        error.GetProperty("detail").GetString().ShouldBe("Contact name is required. (Parameter 'value')");
+        error.GetProperty("detail").GetString().ShouldBe("Contact name is required. (Parameter 'contactName')");
     }
 
     [Test]
@@ -86,9 +86,9 @@ public sealed class CreateCustomerContactV1AcceptanceTests : SeededCustomerConta
         error.GetProperty("detail").GetString().ShouldBe("Customer contact '42' already exists.");
     }
 
-    [TestCase("{\"customerId\":79,\"phone\":\"+1 5550101\",\"email\":\"name.missing@example.com\"}", "Contact name is required. (Parameter 'value')")]
-    [TestCase("{\"customerId\":80,\"contactName\":\"Phone Missing\",\"email\":\"phone.missing@example.com\"}", "Phone number is required. (Parameter 'value')")]
-    [TestCase("{\"customerId\":81,\"contactName\":\"Email Missing\",\"phone\":\"+1 5550103\"}", "Email address is invalid. (Parameter 'value')")]
+    [TestCase("{\"customerId\":79,\"phone\":\"+1 5550101\",\"email\":\"name.missing@example.com\"}", "Contact name is required. (Parameter 'contactName')")]
+    [TestCase("{\"customerId\":80,\"contactName\":\"Phone Missing\",\"email\":\"phone.missing@example.com\"}", "Phone number is required. (Parameter 'phoneNumber')")]
+    [TestCase("{\"customerId\":81,\"contactName\":\"Email Missing\",\"phone\":\"+1 5550103\"}", "Email address is invalid. (Parameter 'emailAddress')")]
     public async Task Post_returns_bad_request_when_required_field_is_missing(string body, string expectedDetail)
     {
         using var request = CreateJsonApiRequest(HttpMethod.Post, "/api/v1/customer-contacts", body);
