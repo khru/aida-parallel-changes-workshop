@@ -237,6 +237,18 @@ dotnet test Aida.ParallelChange.sln -c Release --filter "TestCategory=NarrowInte
 ./scripts/verify.sh
 ```
 
+## Local GitHub Actions validation
+
+Run workflows locally with `act`:
+
+```bash
+act pull_request -W .github/workflows/quality-gates.yml -j build
+act pull_request -W .github/workflows/quality-gates.yml -j tests
+act pull_request -W .github/workflows/quality-gates.yml -j mutation
+```
+
+Pipeline execution is fractionable by job selection (`-j`) and by workflow scope input (`workflow_dispatch`).
+
 ## Assertion libraries
 
 - `Shouldly` is available.

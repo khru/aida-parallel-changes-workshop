@@ -1,0 +1,80 @@
+name: quality-gates
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      scope:
+        description: "Select pipeline scope"
+        type: choice
+        required: true
+        default: all
+        options:
+          - all
+          - build
+          - tests
+          - mutation
+
+env:
+  DOTNET_NOLOGO: true
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.scope == 'all' || github.event.inputs.scope == 'build' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore projects
+        run: ./scripts/restore.sh
+
+      - name: Build solution
+        run: dotnet build Aida.ParallelChange.sln -c Release -warnaserror
+
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.scope == 'all' || github.event.inputs.scope == 'tests' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore projects
+        run: ./scripts/restore.sh
+
+      - name: Run fast tests
+        run: ./scripts/test.sh
+
+  mutation:
+    name: Mutation
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.scope == 'all' || github.event.inputs.scope == 'mutation' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore projects
+        run: ./scripts/restore.sh
+
+      - name: Run mutation tests
+        run: ./scripts/mutation.sh
