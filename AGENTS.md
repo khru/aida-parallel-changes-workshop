@@ -146,16 +146,9 @@ The identity `OpenAI <openai@example.com>` is forbidden for commits in this repo
 
 ## Documentation policy
 
-Always keep these files updated when behavior changes:
-
-- `README.md`
-- `docs/INSTRUCTIONS.md`
-- `docs/DOCUMENTATION.md`
-- `docs/FACILITATION.md`
-- `docs/adr/*.md`
-- `to-do.md`
-
-`docs/INSTRUCTIONS.md` is where the workshop instructions will be.
+- Do not modify `docs/INSTRUCTIONS.md`, `docs/DOCUMENTATION.md`, or `docs/FACILITATION.md` unless explicitly requested by the user.
+- Keep `to-do.md` aligned with accepted AC and current execution decisions.
+- Update `docs/adr/*.md` only when an explicit architecture decision must be recorded.
 
 ## DoD (mandatory)
 
@@ -166,8 +159,8 @@ A task is done only when all of the following are satisfied:
 - Migrations run successfully.
 - All required `.http` requests run successfully.
 - Acceptance, Integration, and Unit tests are green.
+- Fast test suite is deterministic and passes in consecutive runs without retries.
 - Coverage is 100% for non-configuration code, or closest possible with explicit rationale.
 - Mutation score is 100% for non-equivalent mutants.
 - No generated artifacts (`bin`, `obj`, coverage reports, mutation logs/reports) are versioned.
-- Documentation is complete, correct, and aligned with code.
 - Workshop and developer experience remain clear and usable.
