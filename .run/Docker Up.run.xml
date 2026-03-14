@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Docker Up" type="ShConfigurationType" factoryName="Sh Configuration">
-    <option name="SCRIPT_TEXT" value="./scripts/up.sh" />
+    <option name="SCRIPT_TEXT" value="docker compose --project-name ${AIDA_COMPOSE_PROJECT_NAME:-aida-parallel-change} up -d --build" />
     <option name="INDEPENDENT_SCRIPT_PATH" value="true" />
     <option name="SCRIPT_PATH" value="" />
     <option name="SCRIPT_OPTIONS" value="" />

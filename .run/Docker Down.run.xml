@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Docker Down" type="ShConfigurationType" factoryName="Sh Configuration">
-    <option name="SCRIPT_TEXT" value="./scripts/down.sh" />
+    <option name="SCRIPT_TEXT" value="docker compose --project-name ${AIDA_COMPOSE_PROJECT_NAME:-aida-parallel-change} down --remove-orphans" />
     <option name="INDEPENDENT_SCRIPT_PATH" value="true" />
     <option name="SCRIPT_PATH" value="" />
     <option name="SCRIPT_OPTIONS" value="" />
