@@ -7,15 +7,14 @@ Invoke-InAidaRepoRoot {
     Remove-PortCollisions
 
     $requests = @(
-        'http/v1/customer-contacts/scenario-create-get-update-get.http',
-        'http/system/health-200.http',
-        'http/system/openapi-v1-200.http'
-    )
+        Get-ChildItem -Path 'http/system' -Filter '*.http' -File
+        Get-ChildItem -Path 'http/v1/customer-contacts' -Filter '*.http' -File
+    ) |
+    Sort-Object FullName |
+    ForEach-Object { $_.FullName.Substring($PWD.Path.Length + 1).Replace('\\', '/') }
 
     foreach ($request in $requests) {
-        if (Test-Path $request) {
-            Invoke-Compose run --rm ijhttp --env-file $env:AIDA_HTTP_ENV_FILE --env $env:AIDA_HTTP_ENV $request
-            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-        }
+        Invoke-Compose run --rm ijhttp --env-file $env:AIDA_HTTP_ENV_FILE --env $env:AIDA_HTTP_ENV $request
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     }
 }

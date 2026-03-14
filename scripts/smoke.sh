@@ -9,9 +9,8 @@ remove_legacy_containers
 remove_port_collisions
 
 requests=(
-  "http/v1/customer-contacts/scenario-create-get-update-get.http"
-  "http/system/health-200.http"
-  "http/system/openapi-v1-200.http"
+  http/system/*.http
+  http/v1/customer-contacts/*.http
 )
 
 for request in "${requests[@]}"; do

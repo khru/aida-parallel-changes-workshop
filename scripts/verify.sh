@@ -43,7 +43,7 @@ trap cleanup EXIT
 ensure_docker_available
 
 dotnet restore Aida.ParallelChange.sln
-dotnet build Aida.ParallelChange.sln -c Release
+dotnet build Aida.ParallelChange.sln -c Release -warnaserror
 "$AIDA_REPO_ROOT/scripts/check-shell-eol.sh"
 "$AIDA_REPO_ROOT/scripts/test.sh"
 dotnet test Aida.ParallelChange.sln -c Release --filter "TestCategory=NarrowIntegration"

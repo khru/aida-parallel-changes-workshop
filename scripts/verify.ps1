@@ -51,7 +51,7 @@ try {
         dotnet restore Aida.ParallelChange.sln
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-        dotnet build Aida.ParallelChange.sln -c Release
+        dotnet build Aida.ParallelChange.sln -c Release -warnaserror
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
         & (Join-Path $PSScriptRoot 'check-shell-eol.ps1')
