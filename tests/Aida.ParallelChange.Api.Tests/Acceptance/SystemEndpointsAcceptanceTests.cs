@@ -4,29 +4,12 @@ using System.Text.Json;
 namespace Aida.ParallelChange.Api.Tests.Acceptance;
 
 [TestFixture]
-public sealed class SystemEndpointsAcceptanceTests
+public sealed class SystemEndpointsAcceptanceTests : ApiAcceptanceFixture
 {
-    private TestApiFactory _factory = null!;
-    private HttpClient _client = null!;
-
-    [SetUp]
-    public void SetUp()
-    {
-        _factory = new TestApiFactory();
-        _client = _factory.CreateClient();
-    }
-
-    [TearDown]
-    public async Task TearDown()
-    {
-        _client.Dispose();
-        await _factory.DisposeAsync();
-    }
-
     [Test]
     public async Task Health_endpoint_returns_ok_with_status_payload()
     {
-        var response = await _client.GetAsync("/health");
+        var response = await Client.GetAsync("/health");
         var body = await response.Content.ReadAsStringAsync();
         using var document = JsonDocument.Parse(body);
 
@@ -37,7 +20,7 @@ public sealed class SystemEndpointsAcceptanceTests
     [Test]
     public async Task OpenApi_endpoint_returns_v1_document_with_customer_contact_paths()
     {
-        var response = await _client.GetAsync("/openapi/v1.json");
+        var response = await Client.GetAsync("/openapi/v1.json");
         var body = await response.Content.ReadAsStringAsync();
         using var document = JsonDocument.Parse(body);
         var paths = document.RootElement.GetProperty("paths");

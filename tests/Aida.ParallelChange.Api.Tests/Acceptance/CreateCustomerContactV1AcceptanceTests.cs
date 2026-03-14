@@ -1,50 +1,12 @@
 using System.Net;
-using System.Text;
 using System.Text.Json;
 using Shouldly;
 
 namespace Aida.ParallelChange.Api.Tests.Acceptance;
 
 [TestFixture]
-public sealed class CreateCustomerContactV1AcceptanceTests
+public sealed class CreateCustomerContactV1AcceptanceTests : SeededCustomerContactAcceptanceFixture
 {
-    private const string JsonApiMediaType = "application/vnd.api+json";
-
-    private TestApiFactory _factory = null!;
-    private HttpClient _client = null!;
-
-    [SetUp]
-    public async Task SetUp()
-    {
-        _factory = new TestApiFactory();
-        _client = _factory.CreateClient();
-
-        const string body = """
-        {
-          "customerId": 42,
-          "contactName": "Maria Garcia",
-          "phone": "+34 600123123",
-          "email": "maria.garcia@example.com"
-        }
-        """;
-
-        using var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/customer-contacts")
-        {
-            Content = new StringContent(body, Encoding.UTF8, JsonApiMediaType)
-        };
-
-        var response = await _client.SendAsync(request);
-
-        response.StatusCode.ShouldBe(HttpStatusCode.Created);
-    }
-
-    [TearDown]
-    public async Task TearDown()
-    {
-        _client.Dispose();
-        await _factory.DisposeAsync();
-    }
-
     [Test]
     public async Task Post_creates_customer_contact_through_legacy_contract()
     {
@@ -57,13 +19,10 @@ public sealed class CreateCustomerContactV1AcceptanceTests
         }
         """;
 
-        using var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/customer-contacts")
-        {
-            Content = new StringContent(body, Encoding.UTF8, JsonApiMediaType)
-        };
+        using var request = CreateJsonApiRequest(HttpMethod.Post, "/api/v1/customer-contacts", body);
 
-        var postResponse = await _client.SendAsync(request);
-        var getResponse = await _client.GetAsync("/api/v1/customer-contacts/77");
+        var postResponse = await Client.SendAsync(request);
+        var getResponse = await Client.GetAsync("/api/v1/customer-contacts/77");
         var getBody = await getResponse.Content.ReadAsStringAsync();
         using var document = JsonDocument.Parse(getBody);
         var attributes = document.RootElement.GetProperty("data").GetProperty("attributes");
@@ -89,12 +48,9 @@ public sealed class CreateCustomerContactV1AcceptanceTests
         }
         """;
 
-        using var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/customer-contacts")
-        {
-            Content = new StringContent(body, Encoding.UTF8, JsonApiMediaType)
-        };
+        using var request = CreateJsonApiRequest(HttpMethod.Post, "/api/v1/customer-contacts", body);
 
-        var response = await _client.SendAsync(request);
+        var response = await Client.SendAsync(request);
         var responseBody = await response.Content.ReadAsStringAsync();
         using var document = JsonDocument.Parse(responseBody);
         var error = document.RootElement.GetProperty("errors")[0];
@@ -117,12 +73,9 @@ public sealed class CreateCustomerContactV1AcceptanceTests
         }
         """;
 
-        using var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/customer-contacts")
-        {
-            Content = new StringContent(body, Encoding.UTF8, JsonApiMediaType)
-        };
+        using var request = CreateJsonApiRequest(HttpMethod.Post, "/api/v1/customer-contacts", body);
 
-        var response = await _client.SendAsync(request);
+        var response = await Client.SendAsync(request);
         var responseBody = await response.Content.ReadAsStringAsync();
         using var document = JsonDocument.Parse(responseBody);
         var error = document.RootElement.GetProperty("errors")[0];
@@ -138,12 +91,9 @@ public sealed class CreateCustomerContactV1AcceptanceTests
     [TestCase("{\"customerId\":81,\"contactName\":\"Email Missing\",\"phone\":\"+1 5550103\"}", "Email address is invalid. (Parameter 'value')")]
     public async Task Post_returns_bad_request_when_required_field_is_missing(string body, string expectedDetail)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/customer-contacts")
-        {
-            Content = new StringContent(body, Encoding.UTF8, JsonApiMediaType)
-        };
+        using var request = CreateJsonApiRequest(HttpMethod.Post, "/api/v1/customer-contacts", body);
 
-        var response = await _client.SendAsync(request);
+        var response = await Client.SendAsync(request);
         var responseBody = await response.Content.ReadAsStringAsync();
         using var document = JsonDocument.Parse(responseBody);
         var error = document.RootElement.GetProperty("errors")[0];

@@ -1,54 +1,16 @@
 using System.Net;
-using System.Text;
 using System.Text.Json;
 using Shouldly;
 
 namespace Aida.ParallelChange.Api.Tests.Acceptance;
 
 [TestFixture]
-public sealed class GetCustomerContactV1AcceptanceTests
+public sealed class GetCustomerContactV1AcceptanceTests : SeededCustomerContactAcceptanceFixture
 {
-    private const string JsonApiMediaType = "application/vnd.api+json";
-
-    private TestApiFactory _factory = null!;
-    private HttpClient _client = null!;
-
-    [SetUp]
-    public async Task SetUp()
-    {
-        _factory = new TestApiFactory();
-        _client = _factory.CreateClient();
-
-        const string body = """
-        {
-          "customerId": 42,
-          "contactName": "Maria Garcia",
-          "phone": "+34 600123123",
-          "email": "maria.garcia@example.com"
-        }
-        """;
-
-        using var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/customer-contacts")
-        {
-            Content = new StringContent(body, Encoding.UTF8, JsonApiMediaType)
-        };
-
-        var response = await _client.SendAsync(request);
-
-        response.StatusCode.ShouldBe(HttpStatusCode.Created);
-    }
-
-    [TearDown]
-    public async Task TearDown()
-    {
-        _client.Dispose();
-        await _factory.DisposeAsync();
-    }
-
     [Test]
     public async Task Get_returns_legacy_json_api_document()
     {
-        var response = await _client.GetAsync("/api/v1/customer-contacts/42");
+        var response = await Client.GetAsync("/api/v1/customer-contacts/42");
         var body = await response.Content.ReadAsStringAsync();
         using var document = JsonDocument.Parse(body);
         var attributes = document.RootElement.GetProperty("data").GetProperty("attributes");
@@ -63,7 +25,7 @@ public sealed class GetCustomerContactV1AcceptanceTests
     [Test]
     public async Task Get_returns_not_found_when_customer_does_not_exist()
     {
-        var response = await _client.GetAsync("/api/v1/customer-contacts/9999");
+        var response = await Client.GetAsync("/api/v1/customer-contacts/9999");
         var body = await response.Content.ReadAsStringAsync();
         using var document = JsonDocument.Parse(body);
         var error = document.RootElement.GetProperty("errors")[0];
@@ -78,7 +40,7 @@ public sealed class GetCustomerContactV1AcceptanceTests
     [Test]
     public async Task Get_returns_bad_request_when_customer_id_is_invalid()
     {
-        var response = await _client.GetAsync("/api/v1/customer-contacts/invalid-id");
+        var response = await Client.GetAsync("/api/v1/customer-contacts/invalid-id");
         var body = await response.Content.ReadAsStringAsync();
         using var document = JsonDocument.Parse(body);
         var error = document.RootElement.GetProperty("errors")[0];
@@ -93,7 +55,7 @@ public sealed class GetCustomerContactV1AcceptanceTests
     [Test]
     public async Task Get_returns_bad_request_when_customer_id_is_zero()
     {
-        var response = await _client.GetAsync("/api/v1/customer-contacts/0");
+        var response = await Client.GetAsync("/api/v1/customer-contacts/0");
         var body = await response.Content.ReadAsStringAsync();
         using var document = JsonDocument.Parse(body);
         var error = document.RootElement.GetProperty("errors")[0];

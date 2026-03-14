@@ -4,29 +4,12 @@ using System.Text.Json;
 namespace Aida.ParallelChange.Api.Tests.Acceptance;
 
 [TestFixture]
-public sealed class CustomerContactV1ContractAcceptanceTests
+public sealed class CustomerContactV1ContractAcceptanceTests : ApiAcceptanceFixture
 {
-    private TestApiFactory _factory = null!;
-    private HttpClient _client = null!;
-
-    [SetUp]
-    public void SetUp()
-    {
-        _factory = new TestApiFactory();
-        _client = _factory.CreateClient();
-    }
-
-    [TearDown]
-    public async Task TearDown()
-    {
-        _client.Dispose();
-        await _factory.DisposeAsync();
-    }
-
     [Test]
     public async Task Error_response_uses_json_api_structure_for_bad_request()
     {
-        var response = await _client.GetAsync("/api/v1/customer-contacts/invalid-id");
+        var response = await Client.GetAsync("/api/v1/customer-contacts/invalid-id");
         var body = await response.Content.ReadAsStringAsync();
         using var document = JsonDocument.Parse(body);
         var error = document.RootElement.GetProperty("errors")[0];
@@ -39,7 +22,7 @@ public sealed class CustomerContactV1ContractAcceptanceTests
     [Test]
     public async Task Error_response_uses_json_api_structure_for_not_found()
     {
-        var response = await _client.GetAsync("/api/v1/customer-contacts/9999");
+        var response = await Client.GetAsync("/api/v1/customer-contacts/9999");
         var body = await response.Content.ReadAsStringAsync();
         using var document = JsonDocument.Parse(body);
         var error = document.RootElement.GetProperty("errors")[0];

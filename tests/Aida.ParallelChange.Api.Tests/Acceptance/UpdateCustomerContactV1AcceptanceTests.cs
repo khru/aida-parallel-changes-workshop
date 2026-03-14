@@ -1,50 +1,12 @@
 using System.Net;
-using System.Text;
 using System.Text.Json;
 using Shouldly;
 
 namespace Aida.ParallelChange.Api.Tests.Acceptance;
 
 [TestFixture]
-public sealed class UpdateCustomerContactV1AcceptanceTests
+public sealed class UpdateCustomerContactV1AcceptanceTests : SeededCustomerContactAcceptanceFixture
 {
-    private const string JsonApiMediaType = "application/vnd.api+json";
-
-    private TestApiFactory _factory = null!;
-    private HttpClient _client = null!;
-
-    [SetUp]
-    public async Task SetUp()
-    {
-        _factory = new TestApiFactory();
-        _client = _factory.CreateClient();
-
-        const string body = """
-        {
-          "customerId": 42,
-          "contactName": "Maria Garcia",
-          "phone": "+34 600123123",
-          "email": "maria.garcia@example.com"
-        }
-        """;
-
-        using var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/customer-contacts")
-        {
-            Content = new StringContent(body, Encoding.UTF8, JsonApiMediaType)
-        };
-
-        var response = await _client.SendAsync(request);
-
-        response.StatusCode.ShouldBe(HttpStatusCode.Created);
-    }
-
-    [TearDown]
-    public async Task TearDown()
-    {
-        _client.Dispose();
-        await _factory.DisposeAsync();
-    }
-
     [Test]
     public async Task Put_updates_customer_contact_through_legacy_contract()
     {
@@ -56,13 +18,10 @@ public sealed class UpdateCustomerContactV1AcceptanceTests
         }
         """;
 
-        using var request = new HttpRequestMessage(HttpMethod.Put, "/api/v1/customer-contacts/42")
-        {
-            Content = new StringContent(body, Encoding.UTF8, JsonApiMediaType)
-        };
+        using var request = CreateJsonApiRequest(HttpMethod.Put, "/api/v1/customer-contacts/42", body);
 
-        var putResponse = await _client.SendAsync(request);
-        var getResponse = await _client.GetAsync("/api/v1/customer-contacts/42");
+        var putResponse = await Client.SendAsync(request);
+        var getResponse = await Client.GetAsync("/api/v1/customer-contacts/42");
         var getBody = await getResponse.Content.ReadAsStringAsync();
         using var document = JsonDocument.Parse(getBody);
         var attributes = document.RootElement.GetProperty("data").GetProperty("attributes");
@@ -85,12 +44,9 @@ public sealed class UpdateCustomerContactV1AcceptanceTests
         }
         """;
 
-        using var request = new HttpRequestMessage(HttpMethod.Put, "/api/v1/customer-contacts/9999")
-        {
-            Content = new StringContent(body, Encoding.UTF8, JsonApiMediaType)
-        };
+        using var request = CreateJsonApiRequest(HttpMethod.Put, "/api/v1/customer-contacts/9999", body);
 
-        var response = await _client.SendAsync(request);
+        var response = await Client.SendAsync(request);
         var responseBody = await response.Content.ReadAsStringAsync();
         using var document = JsonDocument.Parse(responseBody);
         var error = document.RootElement.GetProperty("errors")[0];
@@ -112,12 +68,9 @@ public sealed class UpdateCustomerContactV1AcceptanceTests
         }
         """;
 
-        using var request = new HttpRequestMessage(HttpMethod.Put, "/api/v1/customer-contacts/invalid")
-        {
-            Content = new StringContent(body, Encoding.UTF8, JsonApiMediaType)
-        };
+        using var request = CreateJsonApiRequest(HttpMethod.Put, "/api/v1/customer-contacts/invalid", body);
 
-        var response = await _client.SendAsync(request);
+        var response = await Client.SendAsync(request);
         var responseBody = await response.Content.ReadAsStringAsync();
         using var document = JsonDocument.Parse(responseBody);
         var error = document.RootElement.GetProperty("errors")[0];
@@ -139,12 +92,9 @@ public sealed class UpdateCustomerContactV1AcceptanceTests
         }
         """;
 
-        using var request = new HttpRequestMessage(HttpMethod.Put, "/api/v1/customer-contacts/0")
-        {
-            Content = new StringContent(body, Encoding.UTF8, JsonApiMediaType)
-        };
+        using var request = CreateJsonApiRequest(HttpMethod.Put, "/api/v1/customer-contacts/0", body);
 
-        var response = await _client.SendAsync(request);
+        var response = await Client.SendAsync(request);
         var responseBody = await response.Content.ReadAsStringAsync();
         using var document = JsonDocument.Parse(responseBody);
         var error = document.RootElement.GetProperty("errors")[0];
@@ -166,12 +116,9 @@ public sealed class UpdateCustomerContactV1AcceptanceTests
         }
         """;
 
-        using var request = new HttpRequestMessage(HttpMethod.Put, "/api/v1/customer-contacts/42")
-        {
-            Content = new StringContent(body, Encoding.UTF8, JsonApiMediaType)
-        };
+        using var request = CreateJsonApiRequest(HttpMethod.Put, "/api/v1/customer-contacts/42", body);
 
-        var response = await _client.SendAsync(request);
+        var response = await Client.SendAsync(request);
         var responseBody = await response.Content.ReadAsStringAsync();
         using var document = JsonDocument.Parse(responseBody);
         var error = document.RootElement.GetProperty("errors")[0];
@@ -187,12 +134,9 @@ public sealed class UpdateCustomerContactV1AcceptanceTests
     [TestCase("{\"contactName\":\"Ada Lovelace\",\"phone\":\"+44 123456789\"}", "Email address is invalid. (Parameter 'value')")]
     public async Task Put_returns_bad_request_when_required_field_is_missing(string body, string expectedDetail)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Put, "/api/v1/customer-contacts/42")
-        {
-            Content = new StringContent(body, Encoding.UTF8, JsonApiMediaType)
-        };
+        using var request = CreateJsonApiRequest(HttpMethod.Put, "/api/v1/customer-contacts/42", body);
 
-        var response = await _client.SendAsync(request);
+        var response = await Client.SendAsync(request);
         var responseBody = await response.Content.ReadAsStringAsync();
         using var document = JsonDocument.Parse(responseBody);
         var error = document.RootElement.GetProperty("errors")[0];
