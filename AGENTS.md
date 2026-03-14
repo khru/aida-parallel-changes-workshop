@@ -124,6 +124,7 @@ For shell scripts:
 ## GitHub Actions local validation rules
 
 - Workflows under `.github/workflows/*.yml` must be executable locally with `https://github.com/nektos/act`.
+- Docker access is a prerequisite for local `act` validation.
 - Workflow design must support fractional execution to speed up feedback (for example by job selection and/or explicit scope input).
 - Local workflow validation commands must be documented when CI workflows are introduced or changed.
 
@@ -168,7 +169,7 @@ A task is done only when all of the following are satisfied:
 - Fast test suite is deterministic and passes in consecutive runs without retries.
 - Coverage is 100% for non-configuration code, or closest possible with explicit rationale.
 - Mutation score is 100% for non-equivalent mutants.
-- GitHub Actions workflows for build, tests, and mutation run on `pull_request` and `main`, and are validated locally with `act`.
+- GitHub Actions workflows for build, tests, and mutation run on `pull_request` and `main`, and are validated locally with `act` when Docker access is available.
 - CI pipeline can be fractioned for targeted execution (for example by scope input or selected jobs).
 - No generated artifacts (`bin`, `obj`, coverage reports, mutation logs/reports) are versioned.
 - Workshop and developer experience remain clear and usable.
