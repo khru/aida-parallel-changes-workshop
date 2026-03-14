@@ -1,7 +1,7 @@
+using Aida.ParallelChange.Api.Application.CreateCustomerContact;
 using Aida.ParallelChange.Api.Application.GetCustomerContact;
 using Aida.ParallelChange.Api.Application.UpdateCustomerContact;
 using Aida.ParallelChange.Api.Infrastructure.InMemory;
-using Aida.ParallelChange.Api.Ports;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,7 +16,9 @@ public sealed class TestApiFactory : WebApplicationFactory<Program>
         {
             services.AddSingleton<InMemoryCustomerContactRepository>();
             services.AddSingleton<CustomerContactReader>(sp => sp.GetRequiredService<InMemoryCustomerContactRepository>());
-            services.AddSingleton<CustomerContactWriter>(sp => sp.GetRequiredService<InMemoryCustomerContactRepository>());
+            services.AddSingleton<CustomerContactCreator>(sp => sp.GetRequiredService<InMemoryCustomerContactRepository>());
+            services.AddSingleton<CustomerContactUpdater>(sp => sp.GetRequiredService<InMemoryCustomerContactRepository>());
+            services.AddScoped<CreateCustomerContactHandler>();
             services.AddScoped<GetCustomerContactHandler>();
             services.AddScoped<UpdateCustomerContactHandler>();
         });

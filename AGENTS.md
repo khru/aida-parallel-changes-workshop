@@ -1,104 +1,160 @@
 # AGENTS
 
-## Purpose
+## Global quality mandate
 
-This file defines how contributors and coding agents work in this parallel change workshop.
+Every change must be coherent, cohesive, rigorous, and complete.
 
-## Product context
+- Coherent: code, tests, scripts, HTTP docs, and written docs describe the same behavior.
+- Cohesive: each commit has one clear intention.
+- Rigorous: decisions are validated with executable evidence.
+- Complete: no task is done with code only.
 
-- The API is public and consumers are not fully controlled.
-- Production compatibility cannot break.
-- The workshop teaches safe contract and data evolution.
+## Repository scope
 
-## Technical stack
+- Single long-lived branch: `main`.
+- API surface in this state:
+  - `GET /api/v1/customer-contacts/{customerId}`
+  - `POST /api/v1/customer-contacts`
+  - `PUT /api/v1/customer-contacts/{customerId}`
+- System endpoints are mandatory:
+  - `GET /health`
+  - `GET /openapi/v1.json`
 
-- .NET 10
-- ASP.NET Core controllers
-- SQL Server
-- Dapper
-- FluentMigrator
-- NUnit
-- NSubstitute
-- Shouldly and AwesomeAssertions
-- OpenAPI
-- JSON:API media type
-- Docker and Docker Compose
-- JetBrains HTTP Client CLI
+## Non-regression contract (`to-do.md`)
 
-## Branch workflow
+- `to-do.md` is the only tracker and stays editable.
+- Accepted AC are immutable: do not add, remove, weaken, or rewrite AC.
+- New tests can be added at any time.
+- Nothing already covered by accepted AC can break.
 
-Workshop branches:
+## Design and coding rules
 
-1. `workshop/initial-state`
-2. `workshop/expand`
-3. `workshop/migrate`
-4. `workshop/contract`
+- No comments in executable code.
+- Names must reveal intention.
+- Enforce separation of concerns.
+- Enforce SOLID.
+- Enforce dependency inversion and inversion of control.
+- Respect the Law of Demeter.
+- Prefer object calisthenics where applicable.
+- Preserve encapsulation and immutability where applicable.
+- Use DTO at boundaries and Value Objects for domain invariants.
+- Apply patterns only when needed and according to their original intent.
 
-Participant flow:
+## Command/query rules
 
-```bash
-git checkout workshop/initial-state
-git checkout -b team-x-solution
-```
+- Commands do not return booleans.
+- Command handlers do not return success/failure values.
+- Query handlers return data.
+- Command failures are represented explicitly (for example, typed errors), then mapped at the boundary.
 
-## Development rules
+## Double-loop TDD operating model
 
-- Keep code without comments.
-- Use intention-revealing names.
-- Keep clear separation of responsibilities.
-- Apply SOLID principles.
-- Apply dependency inversion and inversion of control.
-- Favor encapsulation and immutability when useful.
-- Avoid switch statements.
-- Avoid magic strings and magic numbers.
-- Do not use Entity Framework in this repository.
+Use outside-in double-loop TDD for every change.
 
-## TDD rules
+1. Update test plan in `to-do.md`.
+2. Introduce one failing outer test.
+3. Introduce inner tests only as needed.
+4. Make green with minimum implementation.
+5. Refactor production and tests.
+6. Reprioritize `to-do.md`.
+7. Commit before next cycle.
 
-- Introduce exactly one failing test at a time.
-- A failing test must fail for the right business reason.
-- Implement the smallest change to make the test pass.
-- Refactor immediately after green.
-- Prioritize sociable tests from endpoint downward.
-- Use test doubles only to reduce technical coupling.
+Only one failing test at a time.
 
-## Test quality rules
+## ZOMBIES and triangulation
 
-- Tests must verify observable behavior.
-- Avoid assertions against internal structure or implementation details.
-- Avoid fragile JSON substring assertions.
-- Parse JSON payloads and assert semantic values.
-- Enforce FIRST across the suite.
-- Keep solitary tests only for pure value objects and invariants.
-- Fix or remove non-deterministic tests.
+- Keep ZOMBIES decomposition in `to-do.md`.
+- Use triangulation and rule of three.
+- Do not abstract after one example.
 
-## Test time budget
+## Test architecture and style rules
 
-- The fast local suite must complete in 45 seconds or less.
-- If the suite exceeds 45 seconds, optimization is mandatory before continuing.
+- Test folders must be:
+  - `Acceptance`
+  - `Integration`
+  - `Unit`
+- Tests must verify observable behavior, not internal structure.
+- Tests must have explicit Arrange/Act/Assert.
+- Tests must not contain `if`, `switch`, or loops.
+- Prefer parameterized tests before helper methods.
+- Helper methods are allowed only when strictly necessary for readability.
+- Do not change architecture or design only to make sociable tests easier.
+- Use solitary tests or doubles only when they reduce technical coupling.
 
-## Quality gates before moving forward
+Anti-pattern examples that are not allowed:
 
-```bash
-dotnet restore Aida.ParallelChange.sln
-dotnet build Aida.ParallelChange.sln -c Release
-dotnet test Aida.ParallelChange.sln -c Release
-./scripts/up.sh
-./scripts/smoke.sh
-./scripts/down.sh
-```
+- Tests that only verify DTO default values.
+- Tests that assert framework/runtime internals instead of system behavior.
+
+## Script rules
+
+Required scripts must work in both shell and PowerShell variants:
+
+- `scripts/up.*`
+- `scripts/down.*`
+- `scripts/migrate.*`
+- `scripts/smoke.*`
+- `scripts/test.*`
+- `scripts/coverage.*`
+- `scripts/mutation.*`
+- `scripts/verify.*`
+- `scripts/workshop-replay.*`
+- `scripts/check-shell-eol.*`
+
+For shell scripts:
+
+- `*.sh` are LF-only.
+- CRLF in `*.sh` is a hard failure.
+
+## Executable HTTP documentation rules
+
+- Keep `.http` coverage for all endpoint outcomes.
+- Include `.http` for health and OpenAPI.
+- Keep `.http` aligned with acceptance tests and docs.
 
 ## Commit policy
 
-- Keep commits small and intentional.
-- Do not mix different workshop phases in one commit.
-- Every commit must leave the repository green.
-- `workshop/contract` must not keep unused transitional code.
-- Avoid merge commits in workshop branches.
+- Commits are mandatory while working.
+- Commits must be small and single-intention.
+- Every commit message must include phase marker and intent:
+  - `[expand]`
+  - `[migrate]`
+  - `[contract]`
+
+## Commit identity policy
+
+All commits must use this identity configuration:
+
+- GitHub handle: `evalverde-eng`
+- Author: `Emmanuel Valverde Ramos <evalverde@domingoalonsogroup.com>`
+- Committer: `Emmanuel Valverde Ramos <evalverde@domingoalonsogroup.com>`
+
+The identity `OpenAI <openai@example.com>` is forbidden for commits in this repository.
 
 ## Documentation policy
 
-- Keep `README.md` current with runnable instructions and branch-specific diagrams.
-- Keep `docs/INSTRUCTIONS.md`, `docs/DOCUMENTATION.md`, and `docs/FACILITATION.md` current.
-- Keep ADRs in `docs/adr` current.
-- Create a new ADR when architecture decisions change.
+Always keep these files updated when behavior changes:
+
+- `README.md`
+- `docs/INSTRUCTIONS.md`
+- `docs/DOCUMENTATION.md`
+- `docs/FACILITATION.md`
+- `docs/adr/*.md`
+- `to-do.md`
+
+`docs/INSTRUCTIONS.md` is where the workshop instructions will be.
+
+## DoD (mandatory)
+
+A task is done only when all of the following are satisfied:
+
+- Application compiles in Release.
+- Required scripts run successfully.
+- Migrations run successfully.
+- All required `.http` requests run successfully.
+- Acceptance, Integration, and Unit tests are green.
+- Coverage is 100% for non-configuration code, or closest possible with explicit rationale.
+- Mutation score is 100% for non-equivalent mutants.
+- No generated artifacts (`bin`, `obj`, coverage reports, mutation logs/reports) are versioned.
+- Documentation is complete, correct, and aligned with code.
+- Workshop and developer experience remain clear and usable.

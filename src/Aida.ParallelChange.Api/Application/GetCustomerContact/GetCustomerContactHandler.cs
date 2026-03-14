@@ -1,6 +1,3 @@
-using Aida.ParallelChange.Api.Domain;
-using Aida.ParallelChange.Api.Ports;
-
 namespace Aida.ParallelChange.Api.Application.GetCustomerContact;
 
 public sealed class GetCustomerContactHandler
@@ -12,7 +9,7 @@ public sealed class GetCustomerContactHandler
         _reader = reader;
     }
 
-    public Task<CustomerContact?> HandleAsync(GetCustomerContactQuery query, CancellationToken cancellationToken = default)
+    public Task<FindCustomerContactResult> HandleAsync(GetCustomerContactQuery query, CancellationToken cancellationToken = default)
     {
         return _reader.FindByIdAsync(query.CustomerId, cancellationToken);
     }

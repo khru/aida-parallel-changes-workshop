@@ -11,21 +11,16 @@ public static class SqlQueries
         WHERE customer_id = @CustomerId;
         """;
 
-    public const string Upsert = """
-        MERGE customer_contacts AS target
-        USING (
-            SELECT @CustomerId AS customer_id,
-                   @ContactName AS contact_name,
-                   @Phone AS phone,
-                   @Email AS email
-        ) AS source
-        ON target.customer_id = source.customer_id
-        WHEN MATCHED THEN
-            UPDATE SET contact_name = source.contact_name,
-                       phone = source.phone,
-                       email = source.email
-        WHEN NOT MATCHED THEN
-            INSERT (customer_id, contact_name, phone, email)
-            VALUES (source.customer_id, source.contact_name, source.phone, source.email);
+    public const string Create = """
+        INSERT INTO customer_contacts (customer_id, contact_name, phone, email)
+        VALUES (@CustomerId, @ContactName, @Phone, @Email);
+        """;
+
+    public const string Update = """
+        UPDATE customer_contacts
+        SET contact_name = @ContactName,
+            phone = @Phone,
+            email = @Email
+        WHERE customer_id = @CustomerId;
         """;
 }

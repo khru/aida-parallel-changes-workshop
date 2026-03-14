@@ -3,9 +3,14 @@ set -euo pipefail
 
 source "$(dirname "$0")/common.sh"
 
-docker compose build ijhttp migrator
-docker compose up -d --build sqlserver
+ensure_repo_root
+ensure_docker_available
+recover_compose_stack_collisions
+
+compose_cmd build ijhttp
+compose_cmd build migrator
+compose_cmd up -d --build sqlserver
 wait_for_sqlserver
-ensure_database_exists
-docker compose run --rm migrator
-docker compose up -d --build api
+recreate_database
+compose_cmd run --rm migrator
+compose_cmd up -d --build api

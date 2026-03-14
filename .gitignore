@@ -2,6 +2,8 @@ bin/
 obj/
 TestResults/
 artifacts/
+.stryker-tmp/
+StrykerOutput/
 .vs/
 .idea/
 *.user
@@ -9,7 +11,10 @@ artifacts/
 *.cache
 *.db
 *.log
+coverage.json
+coverage*.json
 *.zip
 .env
 .env.*
 !.env.example
+.tools/

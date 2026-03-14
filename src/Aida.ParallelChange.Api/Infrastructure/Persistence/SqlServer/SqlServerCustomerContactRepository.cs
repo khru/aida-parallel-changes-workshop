@@ -1,11 +1,14 @@
 using Dapper;
+using Aida.ParallelChange.Api.Application.CreateCustomerContact;
+using Aida.ParallelChange.Api.Application.GetCustomerContact;
+using Aida.ParallelChange.Api.Application.UpdateCustomerContact;
 using Aida.ParallelChange.Api.Domain;
 using Aida.ParallelChange.Api.Infrastructure.Persistence.SqlServer.Rows;
-using Aida.ParallelChange.Api.Ports;
+using Microsoft.Data.SqlClient;
 
 namespace Aida.ParallelChange.Api.Infrastructure.Persistence.SqlServer;
 
-public sealed class SqlServerCustomerContactRepository : CustomerContactReader, CustomerContactWriter
+public sealed class SqlServerCustomerContactRepository : CustomerContactReader, CustomerContactCreator, CustomerContactUpdater
 {
     private readonly DatabaseConnectionFactory _connectionFactory;
 
@@ -14,34 +17,69 @@ public sealed class SqlServerCustomerContactRepository : CustomerContactReader, 
         _connectionFactory = connectionFactory;
     }
 
-    public async Task<CustomerContact?> FindByIdAsync(CustomerId customerId, CancellationToken cancellationToken = default)
+    public async Task<FindCustomerContactResult> FindByIdAsync(CustomerId customerId, CancellationToken cancellationToken = default)
     {
-        await using var connection = await _connectionFactory.CreateOpenConnectionAsync(cancellationToken) as IAsyncDisposable;
-        var sqlConnection = (System.Data.IDbConnection)connection!;
-        var row = await sqlConnection.QuerySingleOrDefaultAsync<CustomerContactV1Row>(SqlQueries.FindById, new { CustomerId = customerId.Value });
+        await using var connection = await _connectionFactory.CreateOpenConnectionAsync(cancellationToken);
+        var command = new CommandDefinition(SqlQueries.FindById, new { CustomerId = customerId.Value }, cancellationToken: cancellationToken);
+        var row = await connection.QuerySingleOrDefaultAsync<CustomerContactV1Row>(command);
 
         if (row is null)
         {
-            return null;
+            return new FindCustomerContactResult.NotFound(customerId);
         }
 
-        return new CustomerContact(
-            new CustomerId(row.CustomerId),
-            row.ContactName,
-            row.Phone,
-            new EmailAddress(row.Email));
+        return new FindCustomerContactResult.Found(
+            new CustomerContact(
+                new CustomerId(row.CustomerId),
+                new ContactName(row.ContactName),
+                new PhoneNumber(row.Phone),
+                new EmailAddress(row.Email)));
     }
 
-    public async Task UpsertAsync(CustomerContact customerContact, CancellationToken cancellationToken = default)
+    public async Task CreateAsync(CustomerContact customerContact, CancellationToken cancellationToken = default)
     {
-        await using var connection = await _connectionFactory.CreateOpenConnectionAsync(cancellationToken) as IAsyncDisposable;
-        var sqlConnection = (System.Data.IDbConnection)connection!;
-        await sqlConnection.ExecuteAsync(SqlQueries.Upsert, new
+        await using var connection = await _connectionFactory.CreateOpenConnectionAsync(cancellationToken);
+
+        try
         {
-            CustomerId = customerContact.CustomerId.Value,
-            ContactName = customerContact.ContactName,
-            Phone = customerContact.Phone,
-            Email = customerContact.Email.Value
-        });
+            var command = new CommandDefinition(
+                SqlQueries.Create,
+                new
+                {
+                    CustomerId = customerContact.CustomerId.Value,
+                    ContactName = customerContact.ContactName.Value,
+                    Phone = customerContact.Phone.Value,
+                    Email = customerContact.Email.Value
+                },
+                cancellationToken: cancellationToken);
+
+            await connection.ExecuteAsync(command);
+        }
+        catch (SqlException exception) when (exception.Number is 2601 or 2627)
+        {
+            throw new CustomerContactAlreadyExistsException(customerContact.CustomerId.Value);
+        }
+    }
+
+    public async Task UpdateAsync(CustomerContact customerContact, CancellationToken cancellationToken = default)
+    {
+        await using var connection = await _connectionFactory.CreateOpenConnectionAsync(cancellationToken);
+        var command = new CommandDefinition(
+            SqlQueries.Update,
+            new
+            {
+                CustomerId = customerContact.CustomerId.Value,
+                ContactName = customerContact.ContactName.Value,
+                Phone = customerContact.Phone.Value,
+                Email = customerContact.Email.Value
+            },
+            cancellationToken: cancellationToken);
+
+        var affectedRows = await connection.ExecuteAsync(command);
+
+        if (affectedRows != 1)
+        {
+            throw new CustomerContactNotFoundException(customerContact.CustomerId.Value);
+        }
     }
 }

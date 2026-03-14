@@ -11,8 +11,12 @@
     <PackageReference Include="NSubstitute" />
     <PackageReference Include="NUnit" />
     <PackageReference Include="NUnit3TestAdapter" />
+    <PackageReference Include="Testcontainers.MsSql" />
+    <PackageReference Include="coverlet.msbuild">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Shouldly" />
-    <PackageReference Include="AwesomeAssertions" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Aida.ParallelChange.Api\Aida.ParallelChange.Api.csproj" />

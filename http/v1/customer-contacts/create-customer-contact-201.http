@@ -1,0 +1,19 @@
+@createCustomerId = {{$timestamp}}
+
+### POST customer contact 201
+POST {{host}}/api/v1/customer-contacts
+Content-Type: application/vnd.api+json
+Accept: application/vnd.api+json
+
+{
+  "customerId": {{createCustomerId}},
+  "contactName": "Create Contact",
+  "phone": "+34 600000601",
+  "email": "create.contact@example.com"
+}
+
+> {%
+client.test("POST returns 201", function() {
+  client.assert(response.status === 201, "Expected 201");
+});
+%}

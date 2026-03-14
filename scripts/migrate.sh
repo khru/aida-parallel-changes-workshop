@@ -3,8 +3,12 @@ set -euo pipefail
 
 source "$(dirname "$0")/common.sh"
 
-docker compose up -d sqlserver
+ensure_repo_root
+ensure_docker_available
+recover_compose_stack_collisions
+
+compose_cmd up -d sqlserver
 wait_for_sqlserver
-ensure_database_exists
-docker compose build migrator
-docker compose run --rm migrator
+recreate_database
+compose_cmd build migrator
+compose_cmd run --rm migrator

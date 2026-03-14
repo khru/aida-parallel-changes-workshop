@@ -1,4 +1,3 @@
-using System.Data;
 using Microsoft.Data.SqlClient;
 
 namespace Aida.ParallelChange.Api.Infrastructure.Persistence.SqlServer;
@@ -12,7 +11,7 @@ public sealed class DatabaseConnectionFactory
         _connectionString = connectionString;
     }
 
-    public async Task<IDbConnection> CreateOpenConnectionAsync(CancellationToken cancellationToken = default)
+    public async Task<SqlConnection> CreateOpenConnectionAsync(CancellationToken cancellationToken = default)
     {
         var connection = new SqlConnection(_connectionString);
         await connection.OpenAsync(cancellationToken);

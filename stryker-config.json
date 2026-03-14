@@ -1,0 +1,32 @@
+{
+  "stryker-config": {
+    "solution": "Aida.ParallelChange.sln",
+    "project": "src/Aida.ParallelChange.Api/Aida.ParallelChange.Api.csproj",
+    "test-projects": [
+      "tests/Aida.ParallelChange.Api.Tests/Aida.ParallelChange.Api.Tests.csproj"
+    ],
+    "configuration": "Release",
+    "mutation-level": "Complete",
+    "concurrency": 1,
+    "test-case-filter": "TestCategory!=NarrowIntegration",
+    "additional-timeout": 180000,
+    "disable-mix-mutants": true,
+    "thresholds": {
+      "high": 100,
+      "low": 100,
+      "break": 100
+    },
+    "reporters": [
+      "Progress",
+      "ClearText",
+      "Json",
+      "Html"
+    ],
+    "mutate": [
+      "Application/**/*.cs",
+      "Domain/**/*.cs",
+      "Infrastructure/Http/Controllers/**/*.cs",
+      "Infrastructure/InMemory/**/*.cs"
+    ]
+  }
+}

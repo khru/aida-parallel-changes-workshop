@@ -1,0 +1,56 @@
+@scenarioCustomerId = {{$timestamp}}
+
+### create
+POST {{host}}/api/v1/customer-contacts
+Content-Type: application/vnd.api+json
+Accept: application/vnd.api+json
+
+{
+  "customerId": {{scenarioCustomerId}},
+  "contactName": "Scenario Start",
+  "phone": "+34 600000801",
+  "email": "scenario.start@example.com"
+}
+
+> {%
+client.test("create returns 201", function() {
+  client.assert(response.status === 201, "Expected 201");
+});
+%}
+
+### get
+GET {{host}}/api/v1/customer-contacts/{{scenarioCustomerId}}
+Accept: application/vnd.api+json
+
+> {%
+client.test("get returns 200", function() {
+  client.assert(response.status === 200, "Expected 200");
+});
+%}
+
+### update
+PUT {{host}}/api/v1/customer-contacts/{{scenarioCustomerId}}
+Content-Type: application/vnd.api+json
+Accept: application/vnd.api+json
+
+{
+  "contactName": "Scenario Updated",
+  "phone": "+34 600000802",
+  "email": "scenario.updated@example.com"
+}
+
+> {%
+client.test("update returns 204", function() {
+  client.assert(response.status === 204, "Expected 204");
+});
+%}
+
+### get again
+GET {{host}}/api/v1/customer-contacts/{{scenarioCustomerId}}
+Accept: application/vnd.api+json
+
+> {%
+client.test("get after update returns 200", function() {
+  client.assert(response.status === 200, "Expected 200");
+});
+%}

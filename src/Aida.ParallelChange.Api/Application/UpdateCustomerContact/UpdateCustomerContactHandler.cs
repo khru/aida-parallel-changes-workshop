@@ -1,18 +1,16 @@
-using Aida.ParallelChange.Api.Ports;
-
 namespace Aida.ParallelChange.Api.Application.UpdateCustomerContact;
 
 public sealed class UpdateCustomerContactHandler
 {
-    private readonly CustomerContactWriter _writer;
+    private readonly CustomerContactUpdater _updater;
 
-    public UpdateCustomerContactHandler(CustomerContactWriter writer)
+    public UpdateCustomerContactHandler(CustomerContactUpdater updater)
     {
-        _writer = writer;
+        _updater = updater;
     }
 
     public Task HandleAsync(UpdateCustomerContactCommand command, CancellationToken cancellationToken = default)
     {
-        return _writer.UpsertAsync(command.CustomerContact, cancellationToken);
+        return _updater.UpdateAsync(command.CustomerContact, cancellationToken);
     }
 }

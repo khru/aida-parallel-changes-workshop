@@ -1,3 +1,8 @@
 $ErrorActionPreference = 'Stop'
 
-docker compose down --remove-orphans
+. "$PSScriptRoot/common.ps1"
+Import-AidaEnv
+
+Invoke-InAidaRepoRoot {
+    Invoke-Compose down --remove-orphans
+}

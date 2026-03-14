@@ -2,56 +2,47 @@
 
 ## Session objective
 
-Guide participants to evolve an API contract without breaking unknown consumers while preserving delivery speed.
+Help participants evolve API and data contracts with production-grade discipline.
+
+## Facilitator framing
+
+State this explicitly at the start:
+
+- This is a workshop, but participants must work as in real day-to-day delivery.
+- OpenAPI is part of the workflow, not optional documentation.
+- Every cycle must include tests, refactor, and documentation alignment.
 
 ## Suggested timeline
 
-- 15 minutes: context and guardrails
-- 60 minutes: guided implementation
-- 15 minutes: debrief and architecture review
+- 15 min: context and rules.
+- 75 min: iterative implementation.
+- 20 min: debrief and architecture review.
 
 ## Recommended team setup
 
-- Teams of 2 or 3 people
-- Rotate driver and navigator every 15 minutes
-- Navigator enforces test quality and branch discipline
+- Pair or mob in groups of 2-3.
+- Rotate driver every 15 minutes.
+- Navigator enforces TDD and no-regression discipline.
 
-## Teaching sequence
+## Facilitation sequence
 
-1. Run `workshop/initial-state` and prove baseline behavior.
-2. Explain why direct breaking migration is risky.
-3. Move to `workshop/expand` and show coexistence.
-4. Move to `workshop/migrate` and show controlled data migration.
-5. Move to `workshop/contract` and remove transitional debt.
+1. Run baseline (`up`, `smoke`, `test`).
+2. Explain current contract and OpenAPI document.
+3. Execute one full double-loop TDD cycle live.
+4. Show refactor of production and tests in the same cycle.
+5. Show commit message with phase marker (`expand`, `migrate`, `contract`).
 
-## Facilitation checkpoints
+## Coaching checkpoints
 
-### Checkpoint 1
-
-Participants can explain legacy contract behavior and test coverage.
-
-### Checkpoint 2
-
-Participants can explain why coexistence and dual-write are temporary but necessary.
-
-### Checkpoint 3
-
-Participants can run backfill and explain rollback limitations.
-
-### Checkpoint 4
-
-Participants can justify contract phase deletion decisions.
-
-## Quality guardrails during the session
-
-- One failing test at a time.
-- Failure must be for the intended reason.
-- No progression with red tests.
-- Keep branch history coherent and focused.
+- Are participants preserving compatibility?
+- Are they checking OpenAPI after contract changes?
+- Are tests behavior-focused (not structure-focused)?
+- Are commits small and phase-explicit?
+- Is `to-do.md` updated without mutating accepted AC?
 
 ## Debrief prompts
 
-- Where is the point of no easy return in your solution?
-- What decision gave the highest safety gain?
-- Which transitional code was hardest to delete and why?
-- Which validation step gave the highest confidence?
+- Which change improved safety the most?
+- Where did design pressure appear first?
+- Which mutant was hardest to kill and why?
+- Which documentation update prevented confusion?

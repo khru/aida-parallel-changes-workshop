@@ -1,0 +1,9 @@
+namespace Aida.ParallelChange.Api.Infrastructure.Http.Contracts.V1;
+
+public sealed class CreateCustomerContactV1Request
+{
+    public int CustomerId { get; init; }
+    public string ContactName { get; init; } = string.Empty;
+    public string Phone { get; init; } = string.Empty;
+    public string Email { get; init; } = string.Empty;
+}

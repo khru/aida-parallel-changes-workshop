@@ -1,0 +1,26 @@
+using Aida.ParallelChange.Api.Domain;
+
+namespace Aida.ParallelChange.Api.Tests.Unit.Domain;
+
+[TestFixture]
+public sealed class CustomerIdTests
+{
+    [TestCase(CustomerContactDomainRules.MinimumCustomerIdValue)]
+    [TestCase(42)]
+    public void Constructor_accepts_positive_values(int value)
+    {
+        var customerId = new CustomerId(value);
+
+        customerId.Value.ShouldBe(value);
+    }
+
+    [TestCase(0)]
+    [TestCase(-1)]
+    public void Constructor_throws_when_value_is_not_positive(int value)
+    {
+        var exception = Should.Throw<ArgumentOutOfRangeException>(() => new CustomerId(value));
+
+        exception.ParamName.ShouldBe("value");
+        exception.Message.ShouldStartWith(CustomerContactDomainRules.CustomerIdMustBeGreaterThanZeroMessage);
+    }
+}

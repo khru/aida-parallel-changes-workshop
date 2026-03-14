@@ -1,0 +1,15 @@
+### OpenAPI v1 document is available
+GET {{host}}/openapi/v1.json
+Accept: application/json
+
+> {%
+client.test("openapi returns 200", function() {
+  client.assert(response.status === 200, "Expected 200");
+});
+
+client.test("openapi has customer contacts paths", function() {
+  const paths = response.body.paths || {};
+  client.assert(paths["/api/v1/customer-contacts"] !== undefined, "Missing /api/v1/customer-contacts path");
+  client.assert(paths["/api/v1/customer-contacts/{customerId}"] !== undefined, "Missing /api/v1/customer-contacts/{customerId} path");
+});
+%}

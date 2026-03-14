@@ -1,7 +1,6 @@
 services:
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: aida-parallel-change-sqlserver
     environment:
       ACCEPT_EULA: "Y"
       MSSQL_SA_PASSWORD: "${AIDA_SQL_PASSWORD:-Your_strong_password_123}"
@@ -19,7 +18,6 @@ services:
     build:
       context: .
       dockerfile: docker/api/Dockerfile
-    container_name: aida-parallel-change-api
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
@@ -34,7 +32,6 @@ services:
     build:
       context: .
       dockerfile: docker/migrations/Dockerfile
-    container_name: aida-parallel-change-migrator
     environment:
       ConnectionStrings__SqlServer: "Server=sqlserver,1433;Database=${AIDA_SQL_DATABASE:-AidaParallelChange};User Id=${AIDA_SQL_USER:-sa};Password=${AIDA_SQL_PASSWORD:-Your_strong_password_123};TrustServerCertificate=true;Encrypt=false"
     depends_on:
@@ -45,7 +42,6 @@ services:
     build:
       context: .
       dockerfile: docker/ijhttp/Dockerfile
-    container_name: aida-parallel-change-ijhttp
     working_dir: /workspace
     volumes:
       - .:/workspace

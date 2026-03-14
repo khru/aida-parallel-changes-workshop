@@ -1,214 +1,165 @@
 # AIDA Parallel Change Workshop
 
-This repository is a hands-on workshop to practice safe contract and data evolution in a .NET 10 HTTP API with unknown consumers.
+This repository simulates day-to-day API evolution work under strict compatibility constraints.
 
-The workshop follows a strict parallel change journey:
+- Runtime: .NET 10, ASP.NET Core, SQL Server, Dapper, FluentMigrator.
+- Branch model: single long-lived branch, `main`.
+- Initial API surface:
+  - `GET /api/v1/customer-contacts/{customerId}`
+  - `POST /api/v1/customer-contacts`
+  - `PUT /api/v1/customer-contacts/{customerId}`
 
-1. `workshop/initial-state`
-2. `workshop/expand`
-3. `workshop/migrate`
-4. `workshop/contract`
+## Prerequisites
 
-This README belongs to `main`.
+- .NET 10 SDK
+- Docker Engine or Docker Desktop with `docker compose`
+- PowerShell 7+ for `*.ps1` scripts (optional)
 
-## What participants build
-
-The initial contract is a legacy flat JSON:API payload for customer contact data:
-
-- `contactName`
-- `phone`
-- `email`
-
-The final target is a structured contract introduced safely in later branches.
-
-## Workshop branch setup
-
-```bash
-git checkout workshop/initial-state
-git checkout -b team-x-solution
-```
-
-`main` keeps the shared baseline tooling and documentation used by every workshop branch.
-
-## Runtime commands
-
-Linux or macOS:
-
-```bash
-./scripts/up.sh
-./scripts/smoke.sh
-./scripts/down.sh
-```
-
-Windows PowerShell:
-
-```powershell
-pwsh ./scripts/up.ps1
-pwsh ./scripts/smoke.ps1
-pwsh ./scripts/down.ps1
-```
-
-## Quality commands
-
-```bash
-./scripts/test.sh
-./scripts/verify.sh
-```
-
-## Branch navigation
-
-```bash
-./workshop-branch.sh list
-./workshop-branch.sh goto expand
-./workshop-branch.sh next
-```
-
-```powershell
-./workshop-branch.ps1 list
-./workshop-branch.ps1 goto migrate
-./workshop-branch.ps1 next
-```
-
-## Additional automation scripts
-
-- `scripts/test-watch.sh` and `scripts/test-watch.ps1`
-- `scripts/god-mode.sh` and `scripts/god-mode.ps1`
-- `scripts/workshop-replay.sh` and `scripts/workshop-replay.ps1`
-- `scripts/verify-history.sh` and `scripts/verify-history.ps1`
-- `scripts/clean-docker.sh` and `scripts/clean-docker.ps1`
-
-## HTTP requests used as executable docs
-
-- `http/v1/get-customer-contact.http`
-- `http/v1/update-customer-contact.http`
-- `http/environments/local.http-client.env.json`
-
-## Documentation map
-
-- `docs/INSTRUCTIONS.md`
-- `docs/DOCUMENTATION.md`
-- `docs/FACILITATION.md`
-- `docs/adr/ADR-001.md`
-- `docs/adr/ADR-002.md`
-- `docs/adr/ADR-003.md`
-- `AGENTS.md`
-
-## Architecture Overview
+## Architecture at a glance
 
 ```mermaid
 flowchart LR
-  Consumer[External Consumer] --> Api[ASP.NET Core API v1]
-  Api --> App[Application Handlers]
-  App --> PortRead[CustomerContactReader]
-  App --> PortWrite[CustomerContactWriter]
-  PortRead --> Repo[SQL Server Repository]
-  PortWrite --> Repo
-  Repo --> Sql[(SQL Server)]
-  Migrator[FluentMigrator Runner] --> Sql
+  Consumer[API Consumer] --> Controller[V1 HTTP Controller]
+  Controller --> GetHandler[GetCustomerContactHandler]
+  Controller --> CreateHandler[CreateCustomerContactHandler]
+  Controller --> UpdateHandler[UpdateCustomerContactHandler]
+  GetHandler --> ReaderPort[CustomerContactReader]
+  CreateHandler --> CreatorPort[CustomerContactCreator]
+  UpdateHandler --> UpdaterPort[CustomerContactUpdater]
+  ReaderPort --> SqlRepo[SqlServerCustomerContactRepository]
+  CreatorPort --> SqlRepo
+  UpdaterPort --> SqlRepo
+  SqlRepo --> Sql[(SQL Server)]
+  Migrator[FluentMigrator runner] --> Sql
 ```
 
-## Use Cases
+## Execution flow
 
 ```mermaid
 flowchart TD
-  Facilitator --> Demo[Demonstrate safe evolution path]
-  Participant --> GetV1[Read customer contact via v1]
-  Participant --> PutV1[Update customer contact via v1]
-  Participant --> RunQuality[Run tests and smoke checks]
-  RunQuality --> Confidence[Preserve compatibility confidence]
+  A[Copy .env.example to .env] --> B[Run scripts/up]
+  B --> C[Run scripts/smoke]
+  C --> D[Run scripts/test]
+  D --> E[Run scripts/coverage]
+  E --> F[Run scripts/mutation]
+  F --> G[Run scripts/verify]
 ```
 
-## C4 Level 1
+## Quick start from zero
 
-```mermaid
-flowchart LR
-  User[API Consumer] --> System[AIDA Parallel Change Workshop System]
-  Facilitator[Workshop Facilitator] --> System
+1) Clone and enter the repository.
+
+2) Create local configuration file:
+
+```bash
+cp .env.example .env
 ```
 
-## C4 Level 2
+3) Start services, apply migrations, and boot API:
 
-```mermaid
-flowchart LR
-  User[API Consumer] --> ApiContainer[API Container]
-  Facilitator[Facilitator] --> Scripts[Automation Scripts]
-  Scripts --> ApiContainer
-  ApiContainer --> SqlContainer[SQL Server Container]
-  MigratorContainer[Migrator Container] --> SqlContainer
+```bash
+./scripts/up.sh
 ```
 
-## C4 Level 3
+4) Run smoke checks (scenario + health + OpenAPI):
 
-```mermaid
-flowchart TB
-  Controller[V1 Controller] --> GetHandler[GetCustomerContactHandler]
-  Controller --> UpdateHandler[UpdateCustomerContactHandler]
-  GetHandler --> ReaderPort[CustomerContactReader]
-  UpdateHandler --> WriterPort[CustomerContactWriter]
-  ReaderPort --> SqlRepo[SqlServerCustomerContactRepository]
-  WriterPort --> SqlRepo
-  SqlRepo --> Sql[(SQL Server)]
+```bash
+./scripts/smoke.sh
 ```
 
-## C4 Level 4
+5) Stop everything:
 
-```mermaid
-flowchart LR
-  GetEndpoint[GET /api/v1/customer-contacts/{id}] --> GetQuery[GetCustomerContactQuery]
-  PutEndpoint[PUT /api/v1/customer-contacts/{id}] --> UpdateCommand[UpdateCustomerContactCommand]
-  GetQuery --> Domain[CustomerContact Domain Model]
-  UpdateCommand --> Domain
-  Domain --> SqlMapper[SQL Mapper]
-  SqlMapper --> Sql[(customer_contacts)]
+```bash
+./scripts/down.sh
 ```
 
-## Endpoint Sequences
+PowerShell equivalents are available for each script (`*.ps1`).
 
-### GET v1
+## Environment variables
 
-```mermaid
-sequenceDiagram
-  participant C as Client
-  participant A as API v1 Controller
-  participant H as Get Handler
-  participant R as SQL Repository
-  participant D as SQL Server
-  C->>A: GET /api/v1/customer-contacts/42
-  A->>H: Handle query
-  H->>R: Read customer contact
-  R->>D: SELECT legacy columns
-  D-->>R: Row
-  R-->>H: Domain contact
-  H-->>A: Domain contact
-  A-->>C: 200 JSON:API v1 document
-```
+Scripts read `.env` when present. Defaults are defined in `scripts/common.sh` and `scripts/common.ps1`.
 
-### PUT v1
+Key variables:
 
-```mermaid
-sequenceDiagram
-  participant C as Client
-  participant A as API v1 Controller
-  participant H as Update Handler
-  participant R as SQL Repository
-  participant D as SQL Server
-  C->>A: PUT /api/v1/customer-contacts/42
-  A->>H: Handle command
-  H->>R: Upsert customer contact
-  R->>D: UPDATE legacy columns
-  D-->>R: Ack
-  R-->>H: Done
-  H-->>A: Done
-  A-->>C: 204 No Content
-```
+- `AIDA_SQL_DATABASE`
+- `AIDA_SQL_USER`
+- `AIDA_SQL_PASSWORD`
+- `AIDA_SQL_PORT`
+- `AIDA_API_PORT`
+- `AIDA_HTTP_ENV_FILE`
+- `AIDA_HTTP_ENV`
 
-## Validation baseline
+## OpenAPI and health endpoints
+
+- Health check: `GET /health`
+- OpenAPI document: `GET /openapi/v1.json`
+
+Both endpoints are validated in acceptance tests and `.http` smoke scripts.
+
+## Executable HTTP documentation
+
+Main contract requests:
+
+- `http/v1/customer-contacts/get-customer-contact-200.http`
+- `http/v1/customer-contacts/get-customer-contact-400.http`
+- `http/v1/customer-contacts/get-customer-contact-404.http`
+- `http/v1/customer-contacts/create-customer-contact-201.http`
+- `http/v1/customer-contacts/create-customer-contact-400.http`
+- `http/v1/customer-contacts/create-customer-contact-409.http`
+- `http/v1/customer-contacts/update-customer-contact-204.http`
+- `http/v1/customer-contacts/update-customer-contact-400.http`
+- `http/v1/customer-contacts/update-customer-contact-404.http`
+
+System requests:
+
+- `http/system/health-200.http`
+- `http/system/openapi-v1-200.http`
+
+Smoke scenario:
+
+- `http/v1/customer-contacts/scenario-create-get-update-get.http`
+
+## Scripts
+
+- `scripts/up.*`: build images, start SQL/API, recreate database, run migrations.
+- `scripts/down.*`: stop and remove containers.
+- `scripts/migrate.*`: start SQL, recreate database, run migrator only.
+- `scripts/smoke.*`: execute smoke `.http` requests through `ijhttp` container.
+- `scripts/test.*`: run fast test suite (`TestCategory!=NarrowIntegration`).
+- `scripts/coverage.*`: enforce line and branch coverage thresholds.
+- `scripts/mutation.*`: run Stryker mutation testing.
+- `scripts/check-shell-eol.*`: enforce LF-only for `*.sh`.
+- `scripts/verify.*`: end-to-end local quality gate.
+- `scripts/workshop-replay.*`: replay commit history (`--dry-run`, `--auto`, `--delay`).
+
+## Quality gates
 
 ```bash
 dotnet restore Aida.ParallelChange.sln
 dotnet build Aida.ParallelChange.sln -c Release
-dotnet test Aida.ParallelChange.sln -c Release
+./scripts/check-shell-eol.sh
+./scripts/test.sh
+dotnet test Aida.ParallelChange.sln -c Release --filter "TestCategory=NarrowIntegration"
+./scripts/coverage.sh
+./scripts/mutation.sh
 ./scripts/up.sh
 ./scripts/smoke.sh
 ./scripts/down.sh
 ```
+
+## Workshop operating rules
+
+- Work as in production day-to-day, not as a toy exercise.
+- Keep backward compatibility for existing consumers.
+- Use OpenAPI continuously while evolving contracts.
+- Follow small TDD cycles and refactor tests and production code together.
+- Keep commits small and explicit (phase + intent + rationale).
+
+## Documentation map
+
+- `AGENTS.md`
+- `docs/INSTRUCTIONS.md`
+- `docs/DOCUMENTATION.md`
+- `docs/FACILITATION.md`
+- `docs/adr/`
+- `to-do.md`

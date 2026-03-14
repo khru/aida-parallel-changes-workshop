@@ -1,0 +1,27 @@
+### Ensure customer exists for GET 200
+POST {{host}}/api/v1/customer-contacts
+Content-Type: application/vnd.api+json
+Accept: application/vnd.api+json
+
+{
+  "customerId": 501,
+  "contactName": "Get Ready",
+  "phone": "+34 600000501",
+  "email": "get.ready@example.com"
+}
+
+> {%
+client.test("setup status is 201 or 409", function() {
+  client.assert(response.status === 201 || response.status === 409, "Expected 201 or 409");
+});
+%}
+
+### GET customer contact 200
+GET {{host}}/api/v1/customer-contacts/501
+Accept: application/vnd.api+json
+
+> {%
+client.test("GET returns 200", function() {
+  client.assert(response.status === 200, "Expected 200");
+});
+%}

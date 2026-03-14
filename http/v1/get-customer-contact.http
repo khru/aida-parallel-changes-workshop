@@ -1,3 +1,0 @@
-### Get customer contact v1
-GET {{host}}/api/v1/customer-contacts/42
-Accept: application/vnd.api+json

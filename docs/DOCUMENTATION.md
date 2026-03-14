@@ -58,7 +58,7 @@ Useful when writes must remain valid across mixed contract generations.
 
 Useful when storage models are rebuilt asynchronously from event streams.
 
-## Why SQL Server + Dapper + FluentMigrator
+## Testing strategy
 
 - SQL Server keeps production behavior close to enterprise reality.
 - Dapper keeps SQL explicit and reviewable.

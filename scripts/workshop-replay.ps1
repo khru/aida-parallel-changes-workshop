@@ -1,12 +1,9 @@
 $ErrorActionPreference = 'Stop'
 
-$branches = @(
-    'main',
-    'workshop/initial-state',
-    'workshop/expand',
-    'workshop/migrate',
-    'workshop/contract'
-)
+. "$PSScriptRoot/common.ps1"
+Import-AidaEnv
+
+$branch = 'main'
 
 $dryRun = $false
 $auto = $false
@@ -24,36 +21,28 @@ for ($i = 0; $i -lt $args.Count; $i++) {
     }
 }
 
-$status = git status --porcelain
-if ($status) {
-    throw 'Working tree must be clean before replay.'
-}
+Invoke-InAidaRepoRoot {
+    $status = git status --porcelain
+    if ($status) {
+        throw 'Working tree must be clean before replay.'
+    }
 
-$initialRef = git branch --show-current
-if (-not $initialRef) {
-    $initialRef = git rev-parse HEAD
-}
+    $initialRef = git branch --show-current
+    if (-not $initialRef) {
+        $initialRef = git rev-parse HEAD
+    }
 
-function Restore-Ref {
-    git checkout $initialRef *> $null
-}
+    function Restore-Ref {
+        git checkout $initialRef *> $null
+    }
 
-$previousBranch = $null
-
-try {
-    foreach ($branch in $branches) {
+    try {
         git show-ref --verify --quiet "refs/heads/$branch"
         if ($LASTEXITCODE -ne 0) {
-            continue
+            throw "Branch '$branch' does not exist."
         }
 
-        if (-not $previousBranch) {
-            $range = git rev-list --reverse $branch
-        }
-        else {
-            $base = git merge-base $previousBranch $branch
-            $range = git rev-list --reverse "$base..$branch"
-        }
+        $range = git rev-list --reverse $branch
 
         foreach ($commit in $range) {
             if (-not $commit) { continue }
@@ -70,10 +59,8 @@ try {
                 }
             }
         }
-
-        $previousBranch = $branch
     }
-}
-finally {
-    Restore-Ref
+    finally {
+        Restore-Ref
+    }
 }

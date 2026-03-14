@@ -1,13 +1,19 @@
 . "$PSScriptRoot/common.ps1"
 Import-AidaEnv
 
-docker compose up -d sqlserver
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+Invoke-InAidaRepoRoot {
+    Assert-DockerAvailable
+    Recover-ComposeStackCollisions
 
-Wait-ForSqlServer
-Ensure-DatabaseExists
+    Invoke-Compose up -d sqlserver
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-docker compose build migrator
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    Wait-ForSqlServer
+    Recreate-Database
 
-docker compose run --rm migrator
+    Invoke-Compose build migrator
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+    Invoke-Compose run --rm migrator
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+}

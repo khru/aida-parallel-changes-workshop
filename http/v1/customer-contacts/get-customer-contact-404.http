@@ -1,0 +1,9 @@
+### GET customer contact 404
+GET {{host}}/api/v1/customer-contacts/999999
+Accept: application/vnd.api+json
+
+> {%
+client.test("GET returns 404", function() {
+  client.assert(response.status === 404, "Expected 404");
+});
+%}

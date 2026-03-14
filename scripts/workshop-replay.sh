@@ -1,13 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-branches=(
-  "main"
-  "workshop/initial-state"
-  "workshop/expand"
-  "workshop/migrate"
-  "workshop/contract"
-)
+source "$(dirname "$0")/common.sh"
+
+ensure_repo_root
+
+branch="main"
 
 dry_run="false"
 auto="false"
@@ -50,34 +48,24 @@ restore_ref() {
 
 trap restore_ref EXIT
 
-previous_branch=""
+if ! git show-ref --verify --quiet "refs/heads/$branch"; then
+  echo "Branch '$branch' does not exist." >&2
+  exit 1
+fi
 
-for branch in "${branches[@]}"; do
-  if ! git show-ref --verify --quiet "refs/heads/$branch"; then
-    continue
-  fi
+range="$(git rev-list --reverse "$branch")"
 
-  if [[ -z "$previous_branch" ]]; then
-    range="$(git rev-list --reverse "$branch")"
-  else
-    base="$(git merge-base "$previous_branch" "$branch")"
-    range="$(git rev-list --reverse "${base}..${branch}")"
-  fi
+while IFS= read -r commit; do
+  [[ -z "$commit" ]] && continue
+  message="$(git show -s --format='%s' "$commit")"
+  printf '%s %s %s\n' "$branch" "$commit" "$message"
 
-  while IFS= read -r commit; do
-    [[ -z "$commit" ]] && continue
-    message="$(git show -s --format='%s' "$commit")"
-    printf '%s %s %s\n' "$branch" "$commit" "$message"
-
-    if [[ "$dry_run" == "false" ]]; then
-      git checkout --detach "$commit" >/dev/null
-      if [[ "$auto" == "true" ]]; then
-        sleep "$delay_seconds"
-      else
-        read -r -p "Press enter to continue: " _
-      fi
+  if [[ "$dry_run" == "false" ]]; then
+    git checkout --detach "$commit" >/dev/null
+    if [[ "$auto" == "true" ]]; then
+      sleep "$delay_seconds"
+    else
+      read -r -p "Press enter to continue: " _
     fi
-  done <<< "$range"
-
-  previous_branch="$branch"
-done
+  fi
+done <<< "$range"
