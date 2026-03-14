@@ -261,6 +261,26 @@ Do not optimise for speed at the cost of clarity.
 
 ## Validation commands
 
+### Restore all projects
+
+From repository root:
+
+```bash
+./scripts/restore.sh
+```
+
+```powershell
+./scripts/restore.ps1
+```
+
+Manual alternative (each command starts from repository root and returns to repository root):
+
+```bash
+cd src/Aida.ParallelChange.Api && dotnet restore && cd ../..
+cd src/Aida.ParallelChange.Migrator && dotnet restore && cd ../..
+cd tests/Aida.ParallelChange.Api.Tests && dotnet restore && cd ../..
+```
+
 ### WSL / Bash
 
 ```bash

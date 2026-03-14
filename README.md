@@ -44,6 +44,26 @@ cp .env.example .env
 
 PowerShell equivalents are available (`*.ps1`).
 
+## Restore all projects
+
+Use scripts when you want one command from repository root:
+
+```bash
+./scripts/restore.sh
+```
+
+```powershell
+./scripts/restore.ps1
+```
+
+Manual alternative (each command starts from repository root and returns to repository root):
+
+```bash
+cd src/Aida.ParallelChange.Api && dotnet restore && cd ../..
+cd src/Aida.ParallelChange.Migrator && dotnet restore && cd ../..
+cd tests/Aida.ParallelChange.Api.Tests && dotnet restore && cd ../..
+```
+
 ## Environment configuration
 
 Scripts load `.env` when present and apply defaults when missing.
@@ -178,6 +198,7 @@ System coverage in `http/system`:
 - `scripts/down.*`: stop and remove compose resources.
 - `scripts/migrate.*`: start SQL and run migrations only.
 - `scripts/smoke.*`: execute all `.http` docs in `http/system` and `http/v1/customer-contacts`.
+- `scripts/restore.*`: restore all project files from repository root.
 - `scripts/test.*`: run fast suite (`TestCategory!=NarrowIntegration`).
 - `scripts/coverage.*`: enforce 100% line and branch coverage thresholds.
 - `scripts/mutation.*`: run Stryker mutation with 100% thresholds.
