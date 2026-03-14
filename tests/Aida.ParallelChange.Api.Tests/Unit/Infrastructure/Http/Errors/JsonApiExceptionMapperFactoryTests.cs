@@ -28,9 +28,11 @@ public sealed class JsonApiExceptionMapperFactoryTests
         Func<Exception> exceptionFactory,
         int expectedStatusCode,
         string expectedTitle,
-        string expectedDetail)
+        string expectedDetail,
+        Action<Exception> assertExceptionState)
     {
         var exception = exceptionFactory();
+        assertExceptionState(exception);
 
         var response = _factory.Create(exception);
 
@@ -47,27 +49,32 @@ public sealed class JsonApiExceptionMapperFactoryTests
                 () => (Exception)new ApiRequestValidationException("Invalid customer id", "Customer id must be a number greater than zero."),
                 StatusCodes.Status400BadRequest,
                 "Invalid customer id",
-                "Customer id must be a number greater than zero."),
+                "Customer id must be a number greater than zero.",
+                (Action<Exception>)(_ => { })),
             new TestCaseData(
                 () => (Exception)new CustomerContactAlreadyExistsException(42),
                 StatusCodes.Status409Conflict,
                 "Customer contact already exists",
-                "Customer contact '42' already exists."),
+                "Customer contact '42' already exists.",
+                (Action<Exception>)(exception => ((CustomerContactAlreadyExistsException)exception).CustomerId.ShouldBe(42))),
             new TestCaseData(
                 () => (Exception)new CustomerContactNotFoundException(99),
                 StatusCodes.Status404NotFound,
                 "Customer contact not found",
-                "Customer contact '99' was not found."),
+                "Customer contact '99' was not found.",
+                (Action<Exception>)(exception => ((CustomerContactNotFoundException)exception).CustomerId.ShouldBe(99))),
             new TestCaseData(
                 () => (Exception)new BadHttpRequestException("Malformed"),
                 StatusCodes.Status400BadRequest,
                 "Invalid request",
-                "Invalid request."),
+                "Invalid request.",
+                (Action<Exception>)(_ => { })),
             new TestCaseData(
                 () => (Exception)new InvalidOperationException("Boom"),
                 StatusCodes.Status500InternalServerError,
                 "Unexpected error",
-                "An unexpected error occurred while processing the request.")
+                "An unexpected error occurred while processing the request.",
+                (Action<Exception>)(_ => { }))
         ];
     }
 }
