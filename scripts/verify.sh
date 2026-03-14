@@ -12,7 +12,27 @@ ensure_plan_is_local_only() {
   fi
 }
 
+ensure_generated_artifacts_are_not_tracked() {
+  local tracked_file
+  local tracked_generated=()
+
+  while IFS= read -r tracked_file; do
+    case "$tracked_file" in
+      artifacts/*|TestResults/*|StrykerOutput/*|.stryker-tmp/*|*/bin/*|*/obj/*|coverage.json|coverage*.json|*/coverage.json|*/coverage*.json)
+        tracked_generated+=("$tracked_file")
+        ;;
+    esac
+  done < <(git ls-files)
+
+  if (( ${#tracked_generated[@]} > 0 )); then
+    echo "Generated artifacts must not be tracked by git:" >&2
+    printf ' - %s\n' "${tracked_generated[@]}" >&2
+    return 1
+  fi
+}
+
 ensure_plan_is_local_only
+ensure_generated_artifacts_are_not_tracked
 
 cleanup() {
   "$AIDA_REPO_ROOT/scripts/down.sh" >/dev/null 2>&1 || true

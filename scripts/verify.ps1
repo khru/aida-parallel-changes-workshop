@@ -18,9 +18,34 @@ function Assert-PlanIsLocalOnly {
     }
 }
 
+function Assert-GeneratedArtifactsAreNotTracked {
+    $trackedFiles = git ls-files
+    $trackedGenerated = @()
+
+    foreach ($trackedFile in $trackedFiles) {
+        if ($trackedFile -like 'artifacts/*' -or
+            $trackedFile -like 'TestResults/*' -or
+            $trackedFile -like 'StrykerOutput/*' -or
+            $trackedFile -like '.stryker-tmp/*' -or
+            $trackedFile -like '*/bin/*' -or
+            $trackedFile -like '*/obj/*' -or
+            $trackedFile -like 'coverage.json' -or
+            $trackedFile -like 'coverage*.json' -or
+            $trackedFile -like '*/coverage.json' -or
+            $trackedFile -like '*/coverage*.json') {
+            $trackedGenerated += $trackedFile
+        }
+    }
+
+    if ($trackedGenerated.Count -gt 0) {
+        throw "Generated artifacts must not be tracked by git:`n$($trackedGenerated -join "`n")"
+    }
+}
+
 try {
     Invoke-InAidaRepoRoot {
         Assert-PlanIsLocalOnly
+        Assert-GeneratedArtifactsAreNotTracked
         Assert-DockerAvailable
 
         dotnet restore Aida.ParallelChange.sln
