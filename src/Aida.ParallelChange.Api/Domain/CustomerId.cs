@@ -2,7 +2,7 @@ namespace Aida.ParallelChange.Api.Domain;
 
 public readonly record struct CustomerId
 {
-    public const int MinimumValue = 1;
+    private const int MinimumValue = 1;
 
     private const string ValueMustBeGreaterThanZeroMessage = "Customer id must be greater than zero.";
 

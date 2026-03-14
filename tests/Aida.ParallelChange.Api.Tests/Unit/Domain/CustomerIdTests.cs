@@ -5,7 +5,7 @@ namespace Aida.ParallelChange.Api.Tests.Unit.Domain;
 [TestFixture]
 public sealed class CustomerIdTests
 {
-    [TestCase(CustomerId.MinimumValue)]
+    [TestCase(1)]
     [TestCase(42)]
     public void Constructor_accepts_positive_values(int value)
     {

@@ -2,7 +2,7 @@ namespace Aida.ParallelChange.Api.Domain;
 
 public sealed class PhoneNumber
 {
-    public const int MaximumLength = 30;
+    private const int MaximumLength = 30;
 
     private const string ValueIsRequiredMessage = "Phone number is required.";
     private const string ValueIsInvalidMessage = "Phone number is invalid.";
