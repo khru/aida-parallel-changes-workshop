@@ -2,13 +2,17 @@ namespace Aida.ParallelChange.Api.Domain;
 
 public readonly record struct CustomerId
 {
+    public const int MinimumValue = 1;
+
+    private const string ValueMustBeGreaterThanZeroMessage = "Customer id must be greater than zero.";
+
     public int Value { get; }
 
     public CustomerId(int value)
     {
-        if (value < CustomerContactDomainRules.MinimumCustomerIdValue)
+        if (value < MinimumValue)
         {
-            throw new ArgumentOutOfRangeException(nameof(value), CustomerContactDomainRules.CustomerIdMustBeGreaterThanZeroMessage);
+            throw new ArgumentOutOfRangeException(nameof(value), ValueMustBeGreaterThanZeroMessage);
         }
 
         Value = value;

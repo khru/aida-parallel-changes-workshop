@@ -26,7 +26,7 @@ public sealed class PhoneNumberTests
     [Test]
     public void Constructor_accepts_phone_with_exactly_30_characters()
     {
-        var value = new string('1', 30);
+        var value = new string('1', PhoneNumber.MaximumLength);
 
         var phone = new PhoneNumber(value);
 
@@ -36,7 +36,7 @@ public sealed class PhoneNumberTests
     [Test]
     public void Constructor_throws_when_phone_is_too_long()
     {
-        var value = new string('1', 31);
+        var value = new string('1', PhoneNumber.MaximumLength + 1);
 
         var exception = Should.Throw<ArgumentException>(() => new PhoneNumber(value));
 

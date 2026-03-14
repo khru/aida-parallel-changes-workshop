@@ -2,20 +2,25 @@ namespace Aida.ParallelChange.Api.Domain;
 
 public sealed class PhoneNumber
 {
+    public const int MaximumLength = 30;
+
+    private const string ValueIsRequiredMessage = "Phone number is required.";
+    private const string ValueIsInvalidMessage = "Phone number is invalid.";
+
     public string Value { get; }
 
     public PhoneNumber(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
         {
-            throw new ArgumentException(CustomerContactDomainRules.PhoneNumberIsRequiredMessage, nameof(value));
+            throw new ArgumentException(ValueIsRequiredMessage, nameof(value));
         }
 
         var trimmedValue = value.Trim();
 
-        if (trimmedValue.Length > CustomerContactDomainRules.MaximumPhoneNumberLength)
+        if (trimmedValue.Length > MaximumLength)
         {
-            throw new ArgumentException(CustomerContactDomainRules.PhoneNumberIsInvalidMessage, nameof(value));
+            throw new ArgumentException(ValueIsInvalidMessage, nameof(value));
         }
 
         Value = trimmedValue;

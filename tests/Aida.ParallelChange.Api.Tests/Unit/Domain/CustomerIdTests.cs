@@ -5,7 +5,7 @@ namespace Aida.ParallelChange.Api.Tests.Unit.Domain;
 [TestFixture]
 public sealed class CustomerIdTests
 {
-    [TestCase(CustomerContactDomainRules.MinimumCustomerIdValue)]
+    [TestCase(CustomerId.MinimumValue)]
     [TestCase(42)]
     public void Constructor_accepts_positive_values(int value)
     {
@@ -21,6 +21,6 @@ public sealed class CustomerIdTests
         var exception = Should.Throw<ArgumentOutOfRangeException>(() => new CustomerId(value));
 
         exception.ParamName.ShouldBe("value");
-        exception.Message.ShouldStartWith(CustomerContactDomainRules.CustomerIdMustBeGreaterThanZeroMessage);
+        exception.Message.ShouldStartWith("Customer id must be greater than zero.");
     }
 }
