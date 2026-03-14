@@ -12,11 +12,7 @@ public sealed class GetCustomerContactHandlerTests
     {
         var reader = Substitute.For<CustomerContactReader>();
         var query = new GetCustomerContactQuery(new CustomerId(7));
-        var contact = new CustomerContact(
-            new CustomerId(7),
-            new ContactName("Grace Hopper"),
-            new PhoneNumber("+1 5550100"),
-            new EmailAddress("grace.hopper@example.com"));
+        var contact = CustomerContactBuilder.FromPrimitives(7, "Grace Hopper", "+1 5550100", "grace.hopper@example.com");
 
         reader
             .FindByIdAsync(query.CustomerId, Arg.Any<CancellationToken>())

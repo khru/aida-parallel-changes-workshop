@@ -79,11 +79,7 @@ public sealed class SqlServerCustomerContactRepositoryTests
     {
         var connectionFactory = new DatabaseConnectionFactory(_connectionString);
         var repository = new SqlServerCustomerContactRepository(connectionFactory);
-        var contact = new CustomerContact(
-            new CustomerId(41),
-            new ContactName("Ada Lovelace"),
-            new PhoneNumber("+44 123456789"),
-            new EmailAddress("ada.lovelace@example.com"));
+        var contact = CustomerContactBuilder.FromPrimitives(41, "Ada Lovelace", "+44 123456789", "ada.lovelace@example.com");
 
         await repository.CreateAsync(contact, CancellationToken.None);
         var result = await repository.FindByIdAsync(new CustomerId(41), CancellationToken.None);
@@ -98,16 +94,8 @@ public sealed class SqlServerCustomerContactRepositoryTests
     {
         var connectionFactory = new DatabaseConnectionFactory(_connectionString);
         var repository = new SqlServerCustomerContactRepository(connectionFactory);
-        var originalContact = new CustomerContact(
-            new CustomerId(42),
-            new ContactName("Original Contact"),
-            new PhoneNumber("+44 123456789"),
-            new EmailAddress("original.contact@example.com"));
-        var conflictingContact = new CustomerContact(
-            new CustomerId(42),
-            new ContactName("Conflicting Contact"),
-            new PhoneNumber("+44 123456789"),
-            new EmailAddress("conflicting.contact@example.com"));
+        var originalContact = CustomerContactBuilder.FromPrimitives(42, "Original Contact", "+44 123456789", "original.contact@example.com");
+        var conflictingContact = CustomerContactBuilder.FromPrimitives(42, "Conflicting Contact", "+44 123456789", "conflicting.contact@example.com");
 
         await repository.CreateAsync(originalContact, CancellationToken.None);
         var exception = await Should.ThrowAsync<CustomerContactAlreadyExistsException>(() => repository.CreateAsync(conflictingContact, CancellationToken.None));
@@ -120,16 +108,8 @@ public sealed class SqlServerCustomerContactRepositoryTests
     {
         var connectionFactory = new DatabaseConnectionFactory(_connectionString);
         var repository = new SqlServerCustomerContactRepository(connectionFactory);
-        var originalContact = new CustomerContact(
-            new CustomerId(43),
-            new ContactName("Original Contact"),
-            new PhoneNumber("+44 123456789"),
-            new EmailAddress("original.contact@example.com"));
-        var updatedContact = new CustomerContact(
-            new CustomerId(43),
-            new ContactName("Updated Contact"),
-            new PhoneNumber("+44 123456789"),
-            new EmailAddress("updated.contact@example.com"));
+        var originalContact = CustomerContactBuilder.FromPrimitives(43, "Original Contact", "+44 123456789", "original.contact@example.com");
+        var updatedContact = CustomerContactBuilder.FromPrimitives(43, "Updated Contact", "+44 123456789", "updated.contact@example.com");
 
         await repository.CreateAsync(originalContact, CancellationToken.None);
         await repository.UpdateAsync(updatedContact, CancellationToken.None);
@@ -145,11 +125,7 @@ public sealed class SqlServerCustomerContactRepositoryTests
     {
         var connectionFactory = new DatabaseConnectionFactory(_connectionString);
         var repository = new SqlServerCustomerContactRepository(connectionFactory);
-        var contact = new CustomerContact(
-            new CustomerId(44),
-            new ContactName("Non Existing"),
-            new PhoneNumber("+44 123456789"),
-            new EmailAddress("non.existing@example.com"));
+        var contact = CustomerContactBuilder.FromPrimitives(44, "Non Existing", "+44 123456789", "non.existing@example.com");
 
         var exception = await Should.ThrowAsync<CustomerContactNotFoundException>(() => repository.UpdateAsync(contact, CancellationToken.None));
 
