@@ -11,6 +11,8 @@
 - Baseline reset completed on `main` from `Aida.ParallelChange.Workshop.clean`; parity drift is limited to runtime compatibility fixes in exception handling pipeline.
 - Current blocker: Docker is unavailable in this environment (`docker info` exits with `139`), so Docker-dependent script validation remains pending.
 - Mutation and coverage gates run on fast non-Docker scope; SQL adapter behavior remains covered by integration tests when Docker is available.
+- Fast suite determinism gate passes in consecutive runs without retries (59/59 on each run).
+- Application-layer solitary unit tests were removed after evidence showed no regression in fast tests, coverage, or mutation score.
 
 ## Supersession log
 
@@ -92,7 +94,7 @@
 
 | Mutant ID | Location | Kill test | Equivalent | Status |
 | --- | --- | --- | --- | --- |
-| MUT-PENDING-001 | `scripts/mutation.sh` reaches 100% score with 86/86 tested mutants killed | Q-MUT-001 | no | done |
+| MUT-PENDING-001 | `scripts/mutation.sh` reaches 100% score with 54/54 tested mutants killed | Q-MUT-001 | no | done |
 
 ## Reprioritization gate
 
