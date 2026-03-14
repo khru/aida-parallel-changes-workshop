@@ -1,5 +1,3 @@
-using Aida.ParallelChange.Api.Application.CreateCustomerContact;
-using Aida.ParallelChange.Api.Application.UpdateCustomerContact;
 using Aida.ParallelChange.Api.Infrastructure.Http.Contracts.JsonApi;
 using Aida.ParallelChange.Api.Infrastructure.Http.JsonApi;
 using Microsoft.AspNetCore.Diagnostics;
@@ -8,9 +6,16 @@ namespace Aida.ParallelChange.Api.Infrastructure.Http.Errors;
 
 public sealed class JsonApiExceptionHandler : IExceptionHandler
 {
+    private readonly JsonApiExceptionMapperFactory _mapperFactory;
+
+    public JsonApiExceptionHandler(JsonApiExceptionMapperFactory mapperFactory)
+    {
+        _mapperFactory = mapperFactory;
+    }
+
     public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
     {
-        var response = MapException(exception);
+        var response = _mapperFactory.Create(exception);
 
         httpContext.Response.StatusCode = response.StatusCode;
 
@@ -32,48 +37,7 @@ public sealed class JsonApiExceptionHandler : IExceptionHandler
             options: null,
             contentType: JsonApiMediaTypes.JsonApi,
             cancellationToken: cancellationToken);
+
         return true;
     }
-
-    private static JsonApiErrorResponse MapException(Exception exception)
-    {
-        if (exception is ApiRequestValidationException validationException)
-        {
-            return new JsonApiErrorResponse(
-                JsonApiErrorCatalog.InvalidRequestStatusCode,
-                validationException.Title,
-                validationException.Message);
-        }
-
-        if (exception is CustomerContactAlreadyExistsException alreadyExistsException)
-        {
-            return new JsonApiErrorResponse(
-                JsonApiErrorCatalog.CustomerContactAlreadyExistsStatusCode,
-                JsonApiErrorCatalog.CustomerContactAlreadyExistsTitle,
-                alreadyExistsException.Message);
-        }
-
-        if (exception is CustomerContactNotFoundException notFoundException)
-        {
-            return new JsonApiErrorResponse(
-                JsonApiErrorCatalog.CustomerContactNotFoundStatusCode,
-                JsonApiErrorCatalog.CustomerContactNotFoundTitle,
-                notFoundException.Message);
-        }
-
-        if (exception is BadHttpRequestException)
-        {
-            return new JsonApiErrorResponse(
-                JsonApiErrorCatalog.InvalidRequestStatusCode,
-                JsonApiErrorCatalog.InvalidRequestTitle,
-                JsonApiErrorCatalog.InvalidRequestDetail);
-        }
-
-        return new JsonApiErrorResponse(
-            JsonApiErrorCatalog.UnexpectedErrorStatusCode,
-            JsonApiErrorCatalog.UnexpectedErrorTitle,
-            JsonApiErrorCatalog.UnexpectedErrorDetail);
-    }
-
-    private sealed record JsonApiErrorResponse(int StatusCode, string Title, string Detail);
 }

@@ -5,13 +5,16 @@ namespace Aida.ParallelChange.Api.Infrastructure.Http.Mappers.V1;
 
 public static class CustomerIdRouteParser
 {
+    private const string InvalidCustomerIdTitle = "Invalid customer id";
+    private const string InvalidCustomerIdNumberDetail = "Customer id must be a number greater than zero.";
+
     public static CustomerId Parse(string rawCustomerId)
     {
         if (!int.TryParse(rawCustomerId, out var customerIdValue))
         {
             throw new ApiRequestValidationException(
-                JsonApiErrorCatalog.InvalidCustomerIdTitle,
-                JsonApiErrorCatalog.InvalidCustomerIdNumberDetail);
+                InvalidCustomerIdTitle,
+                InvalidCustomerIdNumberDetail);
         }
 
         try
@@ -20,7 +23,7 @@ public static class CustomerIdRouteParser
         }
         catch (ArgumentOutOfRangeException exception)
         {
-            throw new ApiRequestValidationException(JsonApiErrorCatalog.InvalidCustomerIdTitle, exception.Message);
+            throw new ApiRequestValidationException(InvalidCustomerIdTitle, exception.Message);
         }
     }
 }

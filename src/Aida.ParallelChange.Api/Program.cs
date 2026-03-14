@@ -17,6 +17,12 @@ builder.Services.AddScoped<GetCustomerContactHandler>();
 builder.Services.AddScoped<UpdateCustomerContactHandler>();
 builder.Services.AddControllers();
 builder.Services.AddProblemDetails();
+builder.Services.AddSingleton<IJsonApiExceptionMapper, ApiRequestValidationJsonApiExceptionMapper>();
+builder.Services.AddSingleton<IJsonApiExceptionMapper, CustomerContactAlreadyExistsJsonApiExceptionMapper>();
+builder.Services.AddSingleton<IJsonApiExceptionMapper, CustomerContactNotFoundJsonApiExceptionMapper>();
+builder.Services.AddSingleton<IJsonApiExceptionMapper, BadHttpRequestJsonApiExceptionMapper>();
+builder.Services.AddSingleton<IJsonApiExceptionMapper, UnexpectedJsonApiExceptionMapper>();
+builder.Services.AddSingleton<JsonApiExceptionMapperFactory>();
 builder.Services.AddExceptionHandler<JsonApiExceptionHandler>();
 builder.Services.AddWorkshopOpenApi();
 

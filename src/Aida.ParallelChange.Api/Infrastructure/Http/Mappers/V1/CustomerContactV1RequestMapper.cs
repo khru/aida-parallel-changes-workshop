@@ -5,6 +5,8 @@ namespace Aida.ParallelChange.Api.Infrastructure.Http.Mappers.V1;
 
 public static class CustomerContactV1RequestMapper
 {
+    private const string InvalidRequestTitle = "Invalid request";
+
     public static CustomerContact ToDomain(int customerId, string contactName, string phone, string email)
     {
         try
@@ -18,7 +20,7 @@ public static class CustomerContactV1RequestMapper
         }
         catch (Exception exception) when (exception is ArgumentException or ArgumentOutOfRangeException)
         {
-            throw new ApiRequestValidationException(JsonApiErrorCatalog.InvalidRequestTitle, exception.Message);
+            throw new ApiRequestValidationException(InvalidRequestTitle, exception.Message);
         }
     }
 }
