@@ -60,6 +60,9 @@ try {
         & (Join-Path $PSScriptRoot 'test.ps1')
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+        & (Join-Path $PSScriptRoot 'test.ps1')
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
         dotnet test Aida.ParallelChange.sln -c Release --filter "TestCategory=NarrowIntegration"
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 

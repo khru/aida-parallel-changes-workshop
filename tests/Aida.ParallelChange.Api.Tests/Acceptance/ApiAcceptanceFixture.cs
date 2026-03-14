@@ -1,4 +1,3 @@
-using System.Net.Http;
 using System.Text;
 
 namespace Aida.ParallelChange.Api.Tests.Acceptance;

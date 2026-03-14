@@ -19,7 +19,7 @@ public sealed class SqlServerCustomerContactRepositoryTests
     public async Task OneTimeSetUp()
     {
         var configuredPassword = Environment.GetEnvironmentVariable("AIDA_TEST_SQL_PASSWORD");
-        var password = configuredPassword ?? $"AidaTest_{Guid.NewGuid():N}Aa1!";
+        var password = configuredPassword ?? "AidaTest_StableAa1!";
 
         _sqlContainer = new MsSqlBuilder()
             .WithPassword(password)
