@@ -9,8 +9,9 @@
 - Rule: no accepted AC can regress after refactor.
 - Supersession policy: accepted AC can change only with explicit product decision, ADR evidence, and a traceable note in this file.
 - Baseline reset completed on `main` from `Aida.ParallelChange.Workshop.clean`; parity drift is limited to runtime compatibility fixes in exception handling pipeline.
-- Current blocker: Docker is unavailable in this environment (`docker info` exits with `139`), so Docker-dependent script validation remains pending.
-- Mutation and coverage gates run on fast non-Docker scope; SQL adapter behavior remains covered by integration tests when Docker is available.
+- Docker is available in this environment; Docker-dependent shell script validation is executable locally.
+- PowerShell script execution is blocked in this environment because `pwsh`/`powershell` is unavailable.
+- Mutation and coverage gates run on fast scope and were revalidated together with Docker-dependent shell operational scripts.
 - Fast suite determinism gate passes in consecutive runs without retries (59/59 on each run).
 - Application-layer solitary unit tests were removed after evidence showed no regression in fast tests, coverage, or mutation score.
 
