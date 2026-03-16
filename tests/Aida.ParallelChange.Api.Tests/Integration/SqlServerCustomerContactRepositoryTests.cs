@@ -4,6 +4,7 @@ using Aida.ParallelChange.Api.Application.UpdateCustomerContact;
 using Aida.ParallelChange.Api.Domain;
 using Aida.ParallelChange.Api.Infrastructure.Persistence.Migrations;
 using Aida.ParallelChange.Api.Infrastructure.Persistence.SqlServer;
+using Aida.ParallelChange.Api.Infrastructure.Persistence.SqlServer.Transition;
 using FluentMigrator.Runner;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.DependencyInjection;
@@ -331,5 +332,85 @@ public sealed class SqlServerCustomerContactRepositoryTests
         found.ShouldNotBeNull();
         found.CustomerContact.ContactName.ShouldBe(new ContactName("Maria Garcia"));
         found.CustomerContact.Phone.ShouldBe(new PhoneNumber("+34 600123123"));
+    }
+
+    [Test]
+    public async Task BackfillBatchAsync_populates_structured_columns_for_pending_rows()
+    {
+        await using var seedConnection = new SqlConnection(_connectionString);
+        await seedConnection.OpenAsync();
+        var seedCommand = seedConnection.CreateCommand();
+        seedCommand.CommandText = """
+            INSERT INTO dbo.customer_contacts
+                (customer_id, contact_name, phone, email)
+            VALUES
+                (2001, 'Maria Garcia', '+34 600123123', 'maria.garcia@example.com');
+            """;
+        await seedCommand.ExecuteNonQueryAsync();
+
+        var processor = new StructuredCustomerContactBackfillProcessor(new DatabaseConnectionFactory(_connectionString));
+
+        var result = await processor.BackfillBatchAsync(batchSize: 100, cancellationToken: CancellationToken.None);
+
+        result.UpdatedRows.ShouldBe(1);
+        result.RemainingRows.ShouldBe(0);
+
+        var readCommand = seedConnection.CreateCommand();
+        readCommand.CommandText = "SELECT first_name, last_name, phone_country_code, phone_local_number FROM dbo.customer_contacts WHERE customer_id = 2001;";
+        await using var reader = await readCommand.ExecuteReaderAsync();
+
+        await reader.ReadAsync();
+        reader.GetString(0).ShouldBe("Maria");
+        reader.GetString(1).ShouldBe("Garcia");
+        reader.GetString(2).ShouldBe("+34");
+        reader.GetString(3).ShouldBe("600123123");
+    }
+
+    [Test]
+    public async Task BackfillBatchAsync_is_idempotent_after_rows_are_backfilled()
+    {
+        await using var seedConnection = new SqlConnection(_connectionString);
+        await seedConnection.OpenAsync();
+        var seedCommand = seedConnection.CreateCommand();
+        seedCommand.CommandText = """
+            INSERT INTO dbo.customer_contacts
+                (customer_id, contact_name, phone, email)
+            VALUES
+                (2002, 'Ada Lovelace', '+44 123456789', 'ada.lovelace@example.com');
+            """;
+        await seedCommand.ExecuteNonQueryAsync();
+
+        var processor = new StructuredCustomerContactBackfillProcessor(new DatabaseConnectionFactory(_connectionString));
+
+        var firstRun = await processor.BackfillBatchAsync(batchSize: 100, cancellationToken: CancellationToken.None);
+        var secondRun = await processor.BackfillBatchAsync(batchSize: 100, cancellationToken: CancellationToken.None);
+
+        firstRun.UpdatedRows.ShouldBe(1);
+        secondRun.UpdatedRows.ShouldBe(0);
+        secondRun.RemainingRows.ShouldBe(0);
+    }
+
+    [Test]
+    public async Task BackfillAllAsync_reports_completed_and_skipped_rows_for_mixed_dataset()
+    {
+        await using var seedConnection = new SqlConnection(_connectionString);
+        await seedConnection.OpenAsync();
+        var seedCommand = seedConnection.CreateCommand();
+        seedCommand.CommandText = """
+            INSERT INTO dbo.customer_contacts
+                (customer_id, contact_name, phone, email, first_name, last_name, phone_country_code, phone_local_number)
+            VALUES
+                (2003, 'Grace Hopper', '+1 2025550101', 'grace.hopper@example.com', NULL, NULL, NULL, NULL),
+                (2004, 'Margaret Hamilton', '+1 2025550102', 'margaret.hamilton@example.com', 'Margaret', 'Hamilton', '+1', '2025550102');
+            """;
+        await seedCommand.ExecuteNonQueryAsync();
+
+        var processor = new StructuredCustomerContactBackfillProcessor(new DatabaseConnectionFactory(_connectionString));
+
+        var result = await processor.BackfillAllAsync(batchSize: 1, cancellationToken: CancellationToken.None);
+
+        result.TotalRows.ShouldBe(2);
+        result.CompletedRows.ShouldBe(1);
+        result.SkippedRows.ShouldBe(1);
     }
 }

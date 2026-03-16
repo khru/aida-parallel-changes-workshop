@@ -49,13 +49,13 @@ Baseline accepted AC above remain immutable and must not regress.
 
 | ID | Criterion | Planned tests | Status |
 | --- | --- | --- | --- |
-| S-AC-01 | additive schema expansion preserves current runtime behavior | SI-MIG-EXP-001, AT-V1-NONREG-001 | pending |
-| S-AC-02 | deterministic split/compose policy is explicit and testable | SU-SPLIT-NAME-001, SU-SPLIT-PHONE-001, SU-COMPOSE-001 | pending |
-| S-AC-03 | repository create path performs dual-write for legacy and structured persistence | SI-DUAL-CREATE-001 | pending |
-| S-AC-04 | repository update path performs dual-write for legacy and structured persistence | SI-DUAL-UPDATE-001 | pending |
-| S-AC-05 | repository read path supports transitional mixed rows | SI-READ-TRANSITION-001 | pending |
-| S-AC-06 | deterministic backfill is idempotent and safe | SI-BACKFILL-001 | pending |
-| S-AC-07 | gradual completion process is idempotent for remaining rows | SI-COMPLETION-001 | pending |
+| S-AC-01 | additive schema expansion preserves current runtime behavior | SI-MIG-EXP-001, AT-V1-NONREG-001 | done |
+| S-AC-02 | deterministic split/compose policy is explicit and testable | SU-SPLIT-NAME-001, SU-SPLIT-PHONE-001, SU-COMPOSE-001 | done |
+| S-AC-03 | repository create path performs dual-write for legacy and structured persistence | SI-DUAL-CREATE-001 | done |
+| S-AC-04 | repository update path performs dual-write for legacy and structured persistence | SI-DUAL-UPDATE-001 | done |
+| S-AC-05 | repository read path supports transitional mixed rows | SI-READ-TRANSITION-001 | done |
+| S-AC-06 | deterministic backfill is idempotent and safe | SI-BACKFILL-001 | done |
+| S-AC-07 | gradual completion process is idempotent for remaining rows | SI-COMPLETION-001 | done |
 | S-AC-08 | `GET /api/v2/customer-contacts/{customerId}` returns structured contract and expected errors | AT-V2-GET-200-001, AT-V2-GET-400-001, AT-V2-GET-404-001 | pending |
 | S-AC-09 | `POST /api/v2/customer-contacts` creates structured contact and preserves compatibility behavior | AT-V2-POST-201-001, AT-V2-POST-400-001, AT-V2-POST-409-001 | pending |
 | S-AC-10 | `PUT /api/v2/customer-contacts/{customerId}` updates structured contact and preserves compatibility behavior | AT-V2-PUT-204-001, AT-V2-PUT-400-001, AT-V2-PUT-404-001 | pending |
@@ -64,7 +64,7 @@ Baseline accepted AC above remain immutable and must not regress.
 
 ## Solution branch next red test (only one)
 
-- [ ] SI-MIG-EXP-001
+- [ ] AT-V2-GET-200-001
 
 ## ZOMBIES decomposition
 
