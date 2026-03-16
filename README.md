@@ -75,6 +75,7 @@ Scripts load `.env` when present. Start from `.env.example`.
 
 `AIDA_COMPOSE_PROJECT_NAME` groups compose resources under one project name.
 `AIDA_API_PORT` controls host-to-container API port mapping in Docker and defaults to `8080`.
+Manual Docker commands below use `-p aida-parallel-change` for shell compatibility; change that value if you need a different compose project name.
 
 ## Manual-first operation guide
 
@@ -91,11 +92,11 @@ dotnet restore tests/Aida.ParallelChange.Api.Tests/Aida.ParallelChange.Api.Tests
 ### 2) Bring Docker stack up manually (full flow)
 
 ```bash
-docker compose --project-name ${AIDA_COMPOSE_PROJECT_NAME:-aida-parallel-change} build ijhttp
-docker compose --project-name ${AIDA_COMPOSE_PROJECT_NAME:-aida-parallel-change} build migrator
-docker compose --project-name ${AIDA_COMPOSE_PROJECT_NAME:-aida-parallel-change} up -d --build sqlserver
-docker compose --project-name ${AIDA_COMPOSE_PROJECT_NAME:-aida-parallel-change} run --rm migrator
-docker compose --project-name ${AIDA_COMPOSE_PROJECT_NAME:-aida-parallel-change} up -d --build api
+docker compose -p aida-parallel-change build ijhttp
+docker compose -p aida-parallel-change build migrator
+docker compose -p aida-parallel-change up --build -d sqlserver
+docker compose -p aida-parallel-change run --rm migrator
+docker compose -p aida-parallel-change up --build -d api
 ```
 
 Quick validation:
@@ -113,7 +114,7 @@ Docker environment:
 
 ```bash
 for request in http/*.http; do
-  docker compose --project-name ${AIDA_COMPOSE_PROJECT_NAME:-aida-parallel-change} run --rm ijhttp --env-file http/http-client.env.json --env docker "$request"
+  docker compose -p aida-parallel-change run --rm ijhttp --env-file http/http-client.env.json --env docker "$request"
 done
 ```
 
@@ -121,22 +122,22 @@ Local host environment through Docker HTTP client runner:
 
 ```bash
 for request in http/*.http; do
-  docker compose --project-name ${AIDA_COMPOSE_PROJECT_NAME:-aida-parallel-change} run --rm ijhttp --env-file http/http-client.env.json --env localFromDocker "$request"
+  docker compose -p aida-parallel-change run --rm ijhttp --env-file http/http-client.env.json --env localFromDocker "$request"
 done
 ```
 
 ### 4) Stop Docker stack manually
 
 ```bash
-docker compose --project-name ${AIDA_COMPOSE_PROJECT_NAME:-aida-parallel-change} down --remove-orphans
+docker compose -p aida-parallel-change down --remove-orphans
 ```
 
 ### 5) Migrations only (manual)
 
 ```bash
-docker compose --project-name ${AIDA_COMPOSE_PROJECT_NAME:-aida-parallel-change} up -d sqlserver
-docker compose --project-name ${AIDA_COMPOSE_PROJECT_NAME:-aida-parallel-change} build migrator
-docker compose --project-name ${AIDA_COMPOSE_PROJECT_NAME:-aida-parallel-change} run --rm migrator
+docker compose -p aida-parallel-change up -d sqlserver
+docker compose -p aida-parallel-change build migrator
+docker compose -p aida-parallel-change run --rm migrator
 ```
 
 ### 6) Run API locally without Docker stack scripts
