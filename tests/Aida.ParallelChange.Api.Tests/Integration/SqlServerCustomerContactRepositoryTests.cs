@@ -2,8 +2,11 @@ using Aida.ParallelChange.Api.Application.CreateCustomerContact;
 using Aida.ParallelChange.Api.Application.GetCustomerContact;
 using Aida.ParallelChange.Api.Application.UpdateCustomerContact;
 using Aida.ParallelChange.Api.Domain;
+using Aida.ParallelChange.Api.Infrastructure.Persistence.Migrations;
 using Aida.ParallelChange.Api.Infrastructure.Persistence.SqlServer;
+using FluentMigrator.Runner;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.DependencyInjection;
 using Testcontainers.MsSql;
 
 namespace Aida.ParallelChange.Api.Tests.Integration;
@@ -44,6 +47,7 @@ public sealed class SqlServerCustomerContactRepositoryTests
         };
 
         _connectionString = connectionBuilder.ConnectionString;
+        ApplyMigrations(_connectionString);
     }
 
     [OneTimeTearDown]
@@ -59,19 +63,62 @@ public sealed class SqlServerCustomerContactRepositoryTests
         await connection.OpenAsync();
 
         var command = connection.CreateCommand();
-        command.CommandText = """
-            IF OBJECT_ID('dbo.customer_contacts', 'U') IS NOT NULL
-                DROP TABLE dbo.customer_contacts;
-
-            CREATE TABLE dbo.customer_contacts
-            (
-                customer_id INT NOT NULL PRIMARY KEY,
-                contact_name NVARCHAR(200) NOT NULL,
-                phone NVARCHAR(30) NOT NULL,
-                email NVARCHAR(200) NOT NULL
-            );
-            """;
+        command.CommandText = "DELETE FROM dbo.customer_contacts;";
         await command.ExecuteNonQueryAsync();
+    }
+
+    private static void ApplyMigrations(string connectionString)
+    {
+        var services = new ServiceCollection()
+            .AddFluentMigratorCore()
+            .ConfigureRunner(runner => runner
+                .AddSqlServer()
+                .WithGlobalConnectionString(connectionString)
+                .ScanIn(typeof(CreateCustomerContactsTable).Assembly).For.Migrations())
+            .BuildServiceProvider(false);
+
+        using var scope = services.CreateScope();
+        var runner = scope.ServiceProvider.GetRequiredService<IMigrationRunner>();
+        runner.MigrateUp();
+    }
+
+    [Test]
+    public async Task Migration_setup_applies_customer_contacts_schema()
+    {
+        await using var connection = new SqlConnection(_connectionString);
+        await connection.OpenAsync();
+
+        var tableCommand = connection.CreateCommand();
+        tableCommand.CommandText = "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'dbo' AND TABLE_NAME = 'customer_contacts';";
+
+        var versionOneCommand = connection.CreateCommand();
+        versionOneCommand.CommandText = "SELECT COUNT(*) FROM dbo.VersionInfo WHERE Version = 202604010001;";
+
+        var customerIdColumnCommand = connection.CreateCommand();
+        customerIdColumnCommand.CommandText = "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = 'dbo' AND TABLE_NAME = 'customer_contacts' AND COLUMN_NAME = 'customer_id';";
+
+        var contactNameColumnCommand = connection.CreateCommand();
+        contactNameColumnCommand.CommandText = "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = 'dbo' AND TABLE_NAME = 'customer_contacts' AND COLUMN_NAME = 'contact_name';";
+
+        var phoneColumnCommand = connection.CreateCommand();
+        phoneColumnCommand.CommandText = "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = 'dbo' AND TABLE_NAME = 'customer_contacts' AND COLUMN_NAME = 'phone';";
+
+        var emailColumnCommand = connection.CreateCommand();
+        emailColumnCommand.CommandText = "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = 'dbo' AND TABLE_NAME = 'customer_contacts' AND COLUMN_NAME = 'email';";
+
+        var tableCount = (int)(await tableCommand.ExecuteScalarAsync())!;
+        var versionOneCount = (int)(await versionOneCommand.ExecuteScalarAsync())!;
+        var customerIdColumnCount = (int)(await customerIdColumnCommand.ExecuteScalarAsync())!;
+        var contactNameColumnCount = (int)(await contactNameColumnCommand.ExecuteScalarAsync())!;
+        var phoneColumnCount = (int)(await phoneColumnCommand.ExecuteScalarAsync())!;
+        var emailColumnCount = (int)(await emailColumnCommand.ExecuteScalarAsync())!;
+
+        tableCount.ShouldBe(1);
+        versionOneCount.ShouldBe(1);
+        customerIdColumnCount.ShouldBe(1);
+        contactNameColumnCount.ShouldBe(1);
+        phoneColumnCount.ShouldBe(1);
+        emailColumnCount.ShouldBe(1);
     }
 
     [Test]
