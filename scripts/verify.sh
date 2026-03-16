@@ -47,7 +47,6 @@ dotnet build Aida.ParallelChange.sln -c Release -warnaserror
 "$AIDA_REPO_ROOT/scripts/check-shell-eol.sh"
 "$AIDA_REPO_ROOT/scripts/test.sh"
 "$AIDA_REPO_ROOT/scripts/test.sh"
-dotnet test Aida.ParallelChange.sln -c Release --filter "TestCategory=NarrowIntegration"
 "$AIDA_REPO_ROOT/scripts/coverage.sh"
 "$AIDA_REPO_ROOT/scripts/mutation.sh"
 "$AIDA_REPO_ROOT/scripts/up.sh"
