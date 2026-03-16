@@ -22,30 +22,34 @@ The workshop objective is to evolve a live system incrementally without careless
 
 ## Architecture (C4)
 
-These diagrams represent the current implemented architecture and runtime boundaries.
+These diagrams show the current implemented architecture at three levels of detail.
 
 ### C4 Level 1 - System Context
+
+Focus: who uses the system and which external system it depends on.
 
 ```mermaid
 C4Context
 title C4 Level 1 - System Context
-Person(apiConsumer, "API Consumer", "Consumes customer contact endpoints")
-System(apiSystem, "AIDA Customer Contacts API", "Provides v1 contact operations and system endpoints")
-SystemDb(sqlServer, "SQL Server", "Stores customer_contacts and migration metadata")
+Person(apiConsumer, "API Consumer", "Client integrating with customer contact APIs")
+System(apiSystem, "AIDA Customer Contacts API", "Public v1 JSON:API service")
+SystemDb(sqlServer, "SQL Server", "Operational datastore")
 Rel(apiConsumer, apiSystem, "Uses", "HTTP + JSON:API")
 Rel(apiSystem, sqlServer, "Reads/Writes", "Dapper + SQL")
 ```
 
 ### C4 Level 2 - Container Diagram
 
+Focus: deployable units in this repository and their runtime responsibilities.
+
 ```mermaid
 C4Container
 title C4 Level 2 - Container Diagram
-Person(apiConsumer, "API Consumer", "Consumes customer contact endpoints")
+Person(apiConsumer, "API Consumer", "Client integrating with customer contact APIs")
 System_Boundary(aidaSystem, "AIDA Parallel Change System") {
-  Container(apiContainer, "Aida.ParallelChange.Api", "ASP.NET Core Web API", "Exposes GET/POST/PUT endpoints, health and OpenAPI")
-  Container(migratorContainer, "Aida.ParallelChange.Migrator", ".NET Console", "Runs FluentMigrator migrations")
-  ContainerDb(sqlContainer, "SQL Server", "Relational DB", "Persists customer contacts and migration versions")
+  Container(apiContainer, "Aida.ParallelChange.Api", "ASP.NET Core", "Serves v1 endpoints, health and OpenAPI")
+  Container(migratorContainer, "Aida.ParallelChange.Migrator", ".NET Console", "Applies DB migrations")
+  ContainerDb(sqlContainer, "SQL Server", "Relational DB", "Stores contacts and migration history")
 }
 Rel(apiConsumer, apiContainer, "Calls", "HTTP + JSON:API")
 Rel(apiContainer, sqlContainer, "Reads/Writes", "Dapper")
@@ -54,16 +58,18 @@ Rel(migratorContainer, sqlContainer, "Migrates schema", "FluentMigrator")
 
 ### C4 Level 3 - Component Diagram (API Container)
 
+Focus: main API components and dependency flow inside `Aida.ParallelChange.Api`.
+
 ```mermaid
 C4Component
 title C4 Level 3 - API Component Diagram
 Container_Boundary(apiBoundary, "Aida.ParallelChange.Api") {
-  Component(controller, "CustomerContactsV1Controller", "ASP.NET Controller", "Handles v1 routes and delegates use cases")
-  Component(httpMappers, "HTTP Mappers", "Route parser + request/response mappers", "Maps transport models to domain models")
-  Component(useCases, "Application Handlers", "Get/Create/Update handlers", "Coordinates use cases through ports")
-  Component(domainModel, "Domain Model", "CustomerContact + Value Objects", "Encapsulates domain invariants")
-  Component(repository, "SqlServerCustomerContactRepository", "Infrastructure adapter", "Implements reader/creator/updater ports")
-  Component(errorPipeline, "JSON:API Exception Pipeline", "Exception handler + mapper factory", "Maps exceptions to JSON:API error documents")
+  Component(controller, "CustomerContactsV1Controller", "ASP.NET Controller", "Receives HTTP requests and dispatches use cases")
+  Component(httpMappers, "HTTP Mappers", "Route parser + request/response mappers", "Maps transport payloads to domain models")
+  Component(useCases, "Application Handlers", "Get/Create/Update handlers", "Executes use cases through ports")
+  Component(domainModel, "Domain Model", "CustomerContact + Value Objects", "Holds contact invariants")
+  Component(repository, "SqlServerCustomerContactRepository", "Infrastructure adapter", "Implements read/create/update ports")
+  Component(errorPipeline, "JSON:API Exception Pipeline", "Exception handler + mapper factory", "Converts failures into JSON:API errors")
 }
 ContainerDb(sqlContainer, "SQL Server", "Relational DB")
 Rel(controller, httpMappers, "Parses/maps HTTP contracts")
