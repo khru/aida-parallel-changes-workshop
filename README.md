@@ -80,6 +80,174 @@ Rel(repository, sqlContainer, "Reads/Writes", "SQL")
 Rel(controller, errorPipeline, "Delegates unhandled errors")
 ```
 
+## Sequence Diagrams
+
+These diagrams show the current request flow per endpoint.
+
+### POST `/api/v1/customer-contacts`
+
+```mermaid
+sequenceDiagram
+    actor Consumer as API Consumer
+    participant Controller as CustomerContactsV1Controller
+    participant Mapper as CustomerContactV1RequestMapper
+    participant Handler as CreateCustomerContactHandler
+    participant Repository as SqlServerCustomerContactRepository
+    participant DB as SQL Server
+
+    Consumer->>Controller: POST /api/v1/customer-contacts
+    Controller->>Mapper: Map request to domain
+    Mapper-->>Controller: CustomerContact
+    Controller->>Handler: HandleAsync(command)
+    Handler->>Repository: CreateAsync(customerContact)
+    Repository->>DB: INSERT customer_contacts
+    DB-->>Repository: OK / duplicate key error
+    Repository-->>Handler: Completed / exception
+    Handler-->>Controller: Completed / exception
+    Controller-->>Consumer: 201 Created or mapped JSON:API error
+```
+
+### GET `/api/v1/customer-contacts/{customerId}`
+
+```mermaid
+sequenceDiagram
+    actor Consumer as API Consumer
+    participant Controller as CustomerContactsV1Controller
+    participant Handler as GetCustomerContactHandler
+    participant Repository as SqlServerCustomerContactRepository
+    participant DB as SQL Server
+
+    Consumer->>Controller: GET /api/v1/customer-contacts/{customerId}
+    Controller->>Handler: HandleAsync(query)
+    Handler->>Repository: FindByIdAsync(customerId)
+    Repository->>DB: SELECT by customer_id
+    DB-->>Repository: Row or empty result
+    Repository-->>Handler: Found / NotFound
+    Handler-->>Controller: Result
+    Controller-->>Consumer: 200 JSON:API document or 404 JSON:API error
+```
+
+### PUT `/api/v1/customer-contacts/{customerId}`
+
+```mermaid
+sequenceDiagram
+    actor Consumer as API Consumer
+    participant Controller as CustomerContactsV1Controller
+    participant Mapper as CustomerContactV1RequestMapper
+    participant Handler as UpdateCustomerContactHandler
+    participant Repository as SqlServerCustomerContactRepository
+    participant DB as SQL Server
+
+    Consumer->>Controller: PUT /api/v1/customer-contacts/{customerId}
+    Controller->>Mapper: Map request to domain
+    Mapper-->>Controller: CustomerContact
+    Controller->>Handler: HandleAsync(command)
+    Handler->>Repository: UpdateAsync(customerContact)
+    Repository->>DB: UPDATE customer_contacts
+    DB-->>Repository: affected rows
+    Repository-->>Handler: Completed / not found exception
+    Handler-->>Controller: Completed / exception
+    Controller-->>Consumer: 204 No Content or mapped JSON:API error
+```
+
+### GET `/health`
+
+```mermaid
+sequenceDiagram
+    actor Consumer as API Consumer
+    participant API as ASP.NET Core Pipeline
+
+    Consumer->>API: GET /health
+    API-->>Consumer: 200 {"status":"ok"}
+```
+
+### GET `/openapi/v1.json`
+
+```mermaid
+sequenceDiagram
+    actor Consumer as API Consumer
+    participant API as ASP.NET Core Pipeline
+    participant OpenApi as OpenAPI Endpoint Mapping
+
+    Consumer->>API: GET /openapi/v1.json
+    API->>OpenApi: Resolve document v1
+    OpenApi-->>API: OpenAPI JSON document
+    API-->>Consumer: 200 application/json
+```
+
+## API Payload Contract
+
+### Current Payload (Implemented Now)
+
+Current v1 contract is flat.
+
+POST request body (`POST /api/v1/customer-contacts`):
+
+```json
+{
+  "customerId": 42,
+  "contactName": "Maria Garcia",
+  "phone": "+34 600123123",
+  "email": "maria.garcia@example.com"
+}
+```
+
+GET 200 response body (`GET /api/v1/customer-contacts/42`):
+
+```json
+{
+  "data": {
+    "type": "customer-contacts",
+    "id": "42",
+    "attributes": {
+      "contactName": "Maria Garcia",
+      "phone": "+34 600123123",
+      "email": "maria.garcia@example.com"
+    }
+  }
+}
+```
+
+PUT request body (`PUT /api/v1/customer-contacts/42`):
+
+```json
+{
+  "contactName": "Maria Garcia",
+  "phone": "+34 600123123",
+  "email": "maria.garcia@example.com"
+}
+```
+
+PUT success response: `204 No Content`.
+
+### Target Payload (Workshop Objective)
+
+Target contract is structured and is the intended end state of the workshop.
+
+Target response shape:
+
+```json
+{
+  "data": {
+    "type": "customer-contacts",
+    "id": "42",
+    "attributes": {
+      "name": {
+        "firstName": "Maria",
+        "lastName": "Garcia"
+      },
+      "phone": {
+        "countryCode": "+34",
+        "localNumber": "600123123"
+      },
+      "email": "maria.garcia@example.com"
+    }
+  }
+}
+```
+
+This target payload documents the desired final state and may differ from the currently deployed runtime contract.
+
 ## Documentation map
 
 - `AGENTS.md`
@@ -189,6 +357,12 @@ done
 ### 4) Stop Docker stack manually
 
 ```bash
+docker compose -p aida-parallel-change down
+```
+
+If your local Docker Compose supports orphan cleanup, you can optionally use:
+
+```bash
 docker compose -p aida-parallel-change down --remove-orphans
 ```
 
@@ -273,7 +447,7 @@ Copy-Item .env.example .env
 Shared run configurations are committed under `.run/`:
 
 - `Docker Up` (direct `docker compose ... up -d --build` command)
-- `Docker Down` (direct `docker compose ... down --remove-orphans` command)
+- `Docker Down` (direct `docker compose ... down` command)
 - `HTTP Smoke Docker` (direct compose `run --rm` loop against `docker` env)
 - `HTTP Smoke Local` (direct compose `run --rm` loop against `localFromDocker` env)
 - `Verify Local`
