@@ -4,6 +4,7 @@ using Aida.ParallelChange.Api.Application.GetCustomerContact;
 using Aida.ParallelChange.Api.Application.UpdateCustomerContact;
 using Aida.ParallelChange.Api.Domain;
 using Aida.ParallelChange.Api.Infrastructure.Persistence.SqlServer.Rows;
+using Aida.ParallelChange.Api.Infrastructure.Persistence.SqlServer.Transition;
 using Microsoft.Data.SqlClient;
 
 namespace Aida.ParallelChange.Api.Infrastructure.Persistence.SqlServer;
@@ -28,11 +29,14 @@ public sealed class SqlServerCustomerContactRepository : CustomerContactReader, 
             return new FindCustomerContactResult.NotFound(customerId);
         }
 
+        var contactName = ResolveContactName(row);
+        var phoneNumber = ResolvePhoneNumber(row);
+
         return new FindCustomerContactResult.Found(
             CustomerContactBuilder.Create()
                 .WithCustomerId(row.CustomerId)
-                .WithContactName(row.ContactName)
-                .WithPhoneNumber(row.Phone)
+                .WithContactName(contactName)
+                .WithPhoneNumber(phoneNumber)
                 .WithEmailAddress(row.Email)
                 .Build());
     }
@@ -43,6 +47,9 @@ public sealed class SqlServerCustomerContactRepository : CustomerContactReader, 
 
         try
         {
+            var nameParts = CustomerContactTransitionPolicy.SplitName(customerContact.ContactName.Value);
+            var phoneParts = CustomerContactTransitionPolicy.SplitPhone(customerContact.Phone.Value);
+
             var command = new CommandDefinition(
                 SqlQueries.Create,
                 new
@@ -50,7 +57,11 @@ public sealed class SqlServerCustomerContactRepository : CustomerContactReader, 
                     CustomerId = customerContact.CustomerId.Value,
                     ContactName = customerContact.ContactName.Value,
                     Phone = customerContact.Phone.Value,
-                    Email = customerContact.Email.Value
+                    Email = customerContact.Email.Value,
+                    FirstName = nameParts.FirstName,
+                    LastName = nameParts.LastName,
+                    PhoneCountryCode = phoneParts.CountryCode,
+                    PhoneLocalNumber = phoneParts.LocalNumber
                 },
                 cancellationToken: cancellationToken);
 
@@ -65,6 +76,8 @@ public sealed class SqlServerCustomerContactRepository : CustomerContactReader, 
     public async Task UpdateAsync(CustomerContact customerContact, CancellationToken cancellationToken = default)
     {
         await using var connection = await _connectionFactory.CreateOpenConnectionAsync(cancellationToken);
+        var nameParts = CustomerContactTransitionPolicy.SplitName(customerContact.ContactName.Value);
+        var phoneParts = CustomerContactTransitionPolicy.SplitPhone(customerContact.Phone.Value);
         var command = new CommandDefinition(
             SqlQueries.Update,
             new
@@ -72,7 +85,11 @@ public sealed class SqlServerCustomerContactRepository : CustomerContactReader, 
                 CustomerId = customerContact.CustomerId.Value,
                 ContactName = customerContact.ContactName.Value,
                 Phone = customerContact.Phone.Value,
-                Email = customerContact.Email.Value
+                Email = customerContact.Email.Value,
+                FirstName = nameParts.FirstName,
+                LastName = nameParts.LastName,
+                PhoneCountryCode = phoneParts.CountryCode,
+                PhoneLocalNumber = phoneParts.LocalNumber
             },
             cancellationToken: cancellationToken);
 
@@ -82,5 +99,37 @@ public sealed class SqlServerCustomerContactRepository : CustomerContactReader, 
         {
             throw new CustomerContactNotFoundException(customerContact.CustomerId.Value);
         }
+    }
+
+    private static string ResolveContactName(CustomerContactV1Row row)
+    {
+        if (!string.IsNullOrWhiteSpace(row.ContactName))
+        {
+            return row.ContactName!;
+        }
+
+        var composedName = CustomerContactTransitionPolicy.ComposeName(row.FirstName ?? string.Empty, row.LastName ?? string.Empty);
+        if (!string.IsNullOrWhiteSpace(composedName))
+        {
+            return composedName;
+        }
+
+        throw new InvalidOperationException($"Customer contact '{row.CustomerId}' has no resolvable contact name.");
+    }
+
+    private static string ResolvePhoneNumber(CustomerContactV1Row row)
+    {
+        if (!string.IsNullOrWhiteSpace(row.Phone))
+        {
+            return row.Phone!;
+        }
+
+        var composedPhone = CustomerContactTransitionPolicy.ComposePhone(row.PhoneCountryCode ?? string.Empty, row.PhoneLocalNumber ?? string.Empty);
+        if (!string.IsNullOrWhiteSpace(composedPhone))
+        {
+            return composedPhone;
+        }
+
+        throw new InvalidOperationException($"Customer contact '{row.CustomerId}' has no resolvable phone number.");
     }
 }

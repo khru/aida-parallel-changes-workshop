@@ -167,6 +167,33 @@ public sealed class SqlServerCustomerContactRepositoryTests
     }
 
     [Test]
+    public async Task CreateAsync_writes_structured_columns_from_flat_contact_values()
+    {
+        var connectionFactory = new DatabaseConnectionFactory(_connectionString);
+        var repository = new SqlServerCustomerContactRepository(connectionFactory);
+        var contact = CustomerContactBuilder.Create()
+            .WithCustomerId(411)
+            .WithContactName("Maria Garcia")
+            .WithPhoneNumber("+34 600123123")
+            .WithEmailAddress("maria.garcia@example.com")
+            .Build();
+
+        await repository.CreateAsync(contact, CancellationToken.None);
+
+        await using var connection = new SqlConnection(_connectionString);
+        await connection.OpenAsync();
+        var command = connection.CreateCommand();
+        command.CommandText = "SELECT first_name, last_name, phone_country_code, phone_local_number FROM dbo.customer_contacts WHERE customer_id = 411;";
+        await using var reader = await command.ExecuteReaderAsync();
+
+        await reader.ReadAsync();
+        reader.GetString(0).ShouldBe("Maria");
+        reader.GetString(1).ShouldBe("Garcia");
+        reader.GetString(2).ShouldBe("+34");
+        reader.GetString(3).ShouldBe("600123123");
+    }
+
+    [Test]
     public async Task CreateAsync_returns_conflict_when_customer_already_exists()
     {
         var connectionFactory = new DatabaseConnectionFactory(_connectionString);
@@ -218,6 +245,40 @@ public sealed class SqlServerCustomerContactRepositoryTests
     }
 
     [Test]
+    public async Task UpdateAsync_updates_structured_columns_from_flat_contact_values()
+    {
+        var connectionFactory = new DatabaseConnectionFactory(_connectionString);
+        var repository = new SqlServerCustomerContactRepository(connectionFactory);
+        var originalContact = CustomerContactBuilder.Create()
+            .WithCustomerId(431)
+            .WithContactName("Original Contact")
+            .WithPhoneNumber("+34 600000001")
+            .WithEmailAddress("original.contact@example.com")
+            .Build();
+        var updatedContact = CustomerContactBuilder.Create()
+            .WithCustomerId(431)
+            .WithContactName("Maria Garcia")
+            .WithPhoneNumber("+34 600123123")
+            .WithEmailAddress("updated.contact@example.com")
+            .Build();
+
+        await repository.CreateAsync(originalContact, CancellationToken.None);
+        await repository.UpdateAsync(updatedContact, CancellationToken.None);
+
+        await using var connection = new SqlConnection(_connectionString);
+        await connection.OpenAsync();
+        var command = connection.CreateCommand();
+        command.CommandText = "SELECT first_name, last_name, phone_country_code, phone_local_number FROM dbo.customer_contacts WHERE customer_id = 431;";
+        await using var reader = await command.ExecuteReaderAsync();
+
+        await reader.ReadAsync();
+        reader.GetString(0).ShouldBe("Maria");
+        reader.GetString(1).ShouldBe("Garcia");
+        reader.GetString(2).ShouldBe("+34");
+        reader.GetString(3).ShouldBe("600123123");
+    }
+
+    [Test]
     public async Task UpdateAsync_throws_not_found_when_contact_does_not_exist()
     {
         var connectionFactory = new DatabaseConnectionFactory(_connectionString);
@@ -245,5 +306,30 @@ public sealed class SqlServerCustomerContactRepositoryTests
 
         notFound.ShouldNotBeNull();
         notFound.CustomerId.ShouldBe(new CustomerId(999));
+    }
+
+    [Test]
+    public async Task FindByIdAsync_composes_flat_projection_when_legacy_columns_are_blank()
+    {
+        await using var connection = new SqlConnection(_connectionString);
+        await connection.OpenAsync();
+        var insertCommand = connection.CreateCommand();
+        insertCommand.CommandText = """
+            INSERT INTO dbo.customer_contacts
+                (customer_id, contact_name, phone, email, first_name, last_name, phone_country_code, phone_local_number)
+            VALUES
+                (991, '', '', 'composed@example.com', 'Maria', 'Garcia', '+34', '600123123');
+            """;
+        await insertCommand.ExecuteNonQueryAsync();
+
+        var connectionFactory = new DatabaseConnectionFactory(_connectionString);
+        var repository = new SqlServerCustomerContactRepository(connectionFactory);
+
+        var result = await repository.FindByIdAsync(new CustomerId(991), CancellationToken.None);
+        var found = result as FindCustomerContactResult.Found;
+
+        found.ShouldNotBeNull();
+        found.CustomerContact.ContactName.ShouldBe(new ContactName("Maria Garcia"));
+        found.CustomerContact.Phone.ShouldBe(new PhoneNumber("+34 600123123"));
     }
 }
