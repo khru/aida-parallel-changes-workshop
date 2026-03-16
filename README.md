@@ -107,21 +107,21 @@ curl http://localhost:8080/openapi/v1.json
 
 ### 3) Execute all `.http` manually with Docker HTTP client runner
 
+This repository intentionally uses one ephemeral `ijhttp` container per request (`run --rm`) to guarantee isolated executions.
+
 Docker environment:
 
 ```bash
-docker compose --project-name ${AIDA_COMPOSE_PROJECT_NAME:-aida-parallel-change} up -d --build ijhttp
 for request in http/*.http; do
-  docker compose --project-name ${AIDA_COMPOSE_PROJECT_NAME:-aida-parallel-change} exec -T ijhttp /bin/sh /workspace/scripts/run-ijhttp.sh --env-file http/http-client.env.json --env docker "$request"
+  docker compose --project-name ${AIDA_COMPOSE_PROJECT_NAME:-aida-parallel-change} run --rm ijhttp --env-file http/http-client.env.json --env docker "$request"
 done
 ```
 
 Local host environment through Docker HTTP client runner:
 
 ```bash
-docker compose --project-name ${AIDA_COMPOSE_PROJECT_NAME:-aida-parallel-change} up -d --build ijhttp
 for request in http/*.http; do
-  docker compose --project-name ${AIDA_COMPOSE_PROJECT_NAME:-aida-parallel-change} exec -T ijhttp /bin/sh /workspace/scripts/run-ijhttp.sh --env-file http/http-client.env.json --env localFromDocker "$request"
+  docker compose --project-name ${AIDA_COMPOSE_PROJECT_NAME:-aida-parallel-change} run --rm ijhttp --env-file http/http-client.env.json --env localFromDocker "$request"
 done
 ```
 
@@ -213,8 +213,8 @@ Shared run configurations are committed under `.run/`:
 
 - `Docker Up` (direct `docker compose ... up -d --build` command)
 - `Docker Down` (direct `docker compose ... down --remove-orphans` command)
-- `HTTP Smoke Docker` (direct compose `up` + `exec` loop against `docker` env)
-- `HTTP Smoke Local` (direct compose `up` + `exec` loop against `localFromDocker` env)
+- `HTTP Smoke Docker` (direct compose `run --rm` loop against `docker` env)
+- `HTTP Smoke Local` (direct compose `run --rm` loop against `localFromDocker` env)
 - `Verify Local`
 
 For IDE-native `.http` execution:
@@ -296,6 +296,7 @@ dotnet test Aida.ParallelChange.sln -c Release --filter "TestCategory=NarrowInte
 
 - `./scripts/up.ps1` warning `No resource found to remove for project ...` is treated as non-fatal when Docker returns exit code `0`.
 - If Docker HTTP runner needs host API access, use `localFromDocker` environment.
+- HTTP smoke intentionally starts one ephemeral `ijhttp` container per request (`run --rm`).
 - Runtime API configuration is SQL-only; provide a valid SQL Server connection string for local startup.
 
 ## Working rules summary
