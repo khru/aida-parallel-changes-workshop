@@ -151,6 +151,19 @@ All commits must use this identity configuration:
 
 The identity `OpenAI <openai@example.com>` is forbidden for commits in this repository.
 
+## Planning policy
+
+- Do not assume missing user intent when preparing plans; resolve ambiguity explicitly before execution.
+- Every generated plan must include these two questions with scores:
+  - `How certain is this plan to achieve 100% of what the user wants? (score)`
+  - `If someone read this plan for the first time, could they execute 100% of it without mistakes? (score)`
+- The maximum score for each question is `1`.
+- If either score is lower than `1`, the plan must explain:
+  - what is still weak
+  - why that weakness remains
+  - what must be improved to raise both scores to `1`
+- Plans must be complete, rigorous, coherent, cohesive, non-breaking, and explicit enough to execute without interpretation.
+
 ## Documentation policy
 
 - Do not modify `docs/INSTRUCTIONS.md`, `docs/DOCUMENTATION.md`, or `docs/FACILITATION.md` unless explicitly requested by the user.
