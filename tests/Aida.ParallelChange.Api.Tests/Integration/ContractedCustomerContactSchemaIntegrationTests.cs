@@ -28,6 +28,8 @@ public sealed class ContractedCustomerContactSchemaIntegrationTests
         var masterConnectionString = _sqlContainer.GetConnectionString();
         var databaseName = "AidaParallelChangeContractTests";
 
+        await SqlServerContainerReadinessProbe.WaitUntilAvailableAsync(masterConnectionString);
+
         await using (var connection = new SqlConnection(masterConnectionString))
         {
             await connection.OpenAsync();

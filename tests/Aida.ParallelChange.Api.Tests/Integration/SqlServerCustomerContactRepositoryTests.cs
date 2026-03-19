@@ -33,6 +33,8 @@ public sealed class SqlServerCustomerContactRepositoryTests
         var masterConnectionString = _sqlContainer.GetConnectionString();
         var databaseName = "AidaParallelChangeNarrowTests";
 
+        await SqlServerContainerReadinessProbe.WaitUntilAvailableAsync(masterConnectionString);
+
         await using (var connection = new SqlConnection(masterConnectionString))
         {
             await connection.OpenAsync();
