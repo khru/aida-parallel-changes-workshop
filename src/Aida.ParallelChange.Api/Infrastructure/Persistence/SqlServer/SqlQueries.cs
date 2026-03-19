@@ -4,8 +4,6 @@ public static class SqlQueries
 {
     public const string FindById = """
         SELECT customer_id AS CustomerId,
-               contact_name AS ContactName,
-               phone AS Phone,
                email AS Email,
                first_name AS FirstName,
                last_name AS LastName,
@@ -17,16 +15,14 @@ public static class SqlQueries
 
     public const string Create = """
         INSERT INTO customer_contacts
-            (customer_id, contact_name, phone, email, first_name, last_name, phone_country_code, phone_local_number)
+            (customer_id, email, first_name, last_name, phone_country_code, phone_local_number)
         VALUES
-            (@CustomerId, @ContactName, @Phone, @Email, @FirstName, @LastName, @PhoneCountryCode, @PhoneLocalNumber);
+            (@CustomerId, @Email, @FirstName, @LastName, @PhoneCountryCode, @PhoneLocalNumber);
         """;
 
     public const string Update = """
         UPDATE customer_contacts
-        SET contact_name = @ContactName,
-            phone = @Phone,
-            email = @Email,
+        SET email = @Email,
             first_name = @FirstName,
             last_name = @LastName,
             phone_country_code = @PhoneCountryCode,

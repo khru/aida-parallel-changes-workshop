@@ -55,8 +55,6 @@ public sealed class SqlServerCustomerContactRepository : CustomerContactReader, 
                 new
                 {
                     CustomerId = customerContact.CustomerId.Value,
-                    ContactName = customerContact.ContactName.Value,
-                    Phone = customerContact.Phone.Value,
                     Email = customerContact.Email.Value,
                     FirstName = nameParts.FirstName,
                     LastName = nameParts.LastName,
@@ -83,8 +81,6 @@ public sealed class SqlServerCustomerContactRepository : CustomerContactReader, 
             new
             {
                 CustomerId = customerContact.CustomerId.Value,
-                ContactName = customerContact.ContactName.Value,
-                Phone = customerContact.Phone.Value,
                 Email = customerContact.Email.Value,
                 FirstName = nameParts.FirstName,
                 LastName = nameParts.LastName,
@@ -103,11 +99,6 @@ public sealed class SqlServerCustomerContactRepository : CustomerContactReader, 
 
     private static string ResolveContactName(CustomerContactV1Row row)
     {
-        if (!string.IsNullOrWhiteSpace(row.ContactName))
-        {
-            return row.ContactName!;
-        }
-
         var composedName = CustomerContactTransitionPolicy.ComposeName(row.FirstName ?? string.Empty, row.LastName ?? string.Empty);
         if (!string.IsNullOrWhiteSpace(composedName))
         {
@@ -119,11 +110,6 @@ public sealed class SqlServerCustomerContactRepository : CustomerContactReader, 
 
     private static string ResolvePhoneNumber(CustomerContactV1Row row)
     {
-        if (!string.IsNullOrWhiteSpace(row.Phone))
-        {
-            return row.Phone!;
-        }
-
         var composedPhone = CustomerContactTransitionPolicy.ComposePhone(row.PhoneCountryCode ?? string.Empty, row.PhoneLocalNumber ?? string.Empty);
         if (!string.IsNullOrWhiteSpace(composedPhone))
         {

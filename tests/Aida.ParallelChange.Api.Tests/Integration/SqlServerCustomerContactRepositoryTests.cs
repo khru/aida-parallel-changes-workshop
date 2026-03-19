@@ -4,7 +4,6 @@ using Aida.ParallelChange.Api.Application.UpdateCustomerContact;
 using Aida.ParallelChange.Api.Domain;
 using Aida.ParallelChange.Api.Infrastructure.Persistence.Migrations;
 using Aida.ParallelChange.Api.Infrastructure.Persistence.SqlServer;
-using Aida.ParallelChange.Api.Infrastructure.Persistence.SqlServer.Transition;
 using FluentMigrator.Runner;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.DependencyInjection;
@@ -98,6 +97,9 @@ public sealed class SqlServerCustomerContactRepositoryTests
         var versionTwoCommand = connection.CreateCommand();
         versionTwoCommand.CommandText = "SELECT COUNT(*) FROM dbo.VersionInfo WHERE Version = 202604010002;";
 
+        var versionThreeCommand = connection.CreateCommand();
+        versionThreeCommand.CommandText = "SELECT COUNT(*) FROM dbo.VersionInfo WHERE Version = 202604010003;";
+
         var customerIdColumnCommand = connection.CreateCommand();
         customerIdColumnCommand.CommandText = "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = 'dbo' AND TABLE_NAME = 'customer_contacts' AND COLUMN_NAME = 'customer_id';";
 
@@ -125,6 +127,7 @@ public sealed class SqlServerCustomerContactRepositoryTests
         var tableCount = (int)(await tableCommand.ExecuteScalarAsync())!;
         var versionOneCount = (int)(await versionOneCommand.ExecuteScalarAsync())!;
         var versionTwoCount = (int)(await versionTwoCommand.ExecuteScalarAsync())!;
+        var versionThreeCount = (int)(await versionThreeCommand.ExecuteScalarAsync())!;
         var customerIdColumnCount = (int)(await customerIdColumnCommand.ExecuteScalarAsync())!;
         var contactNameColumnCount = (int)(await contactNameColumnCommand.ExecuteScalarAsync())!;
         var phoneColumnCount = (int)(await phoneColumnCommand.ExecuteScalarAsync())!;
@@ -137,9 +140,10 @@ public sealed class SqlServerCustomerContactRepositoryTests
         tableCount.ShouldBe(1);
         versionOneCount.ShouldBe(1);
         versionTwoCount.ShouldBe(1);
+        versionThreeCount.ShouldBe(1);
         customerIdColumnCount.ShouldBe(1);
-        contactNameColumnCount.ShouldBe(1);
-        phoneColumnCount.ShouldBe(1);
+        contactNameColumnCount.ShouldBe(0);
+        phoneColumnCount.ShouldBe(0);
         emailColumnCount.ShouldBe(1);
         firstNameColumnCount.ShouldBe(1);
         lastNameColumnCount.ShouldBe(1);
@@ -310,16 +314,16 @@ public sealed class SqlServerCustomerContactRepositoryTests
     }
 
     [Test]
-    public async Task FindByIdAsync_composes_flat_projection_when_legacy_columns_are_blank()
+    public async Task FindByIdAsync_projects_legacy_contract_from_structured_columns_only()
     {
         await using var connection = new SqlConnection(_connectionString);
         await connection.OpenAsync();
         var insertCommand = connection.CreateCommand();
         insertCommand.CommandText = """
             INSERT INTO dbo.customer_contacts
-                (customer_id, contact_name, phone, email, first_name, last_name, phone_country_code, phone_local_number)
+                (customer_id, email, first_name, last_name, phone_country_code, phone_local_number)
             VALUES
-                (991, '', '', 'composed@example.com', 'Maria', 'Garcia', '+34', '600123123');
+                (991, 'composed@example.com', 'Maria', 'Garcia', '+34', '600123123');
             """;
         await insertCommand.ExecuteNonQueryAsync();
 
@@ -332,85 +336,5 @@ public sealed class SqlServerCustomerContactRepositoryTests
         found.ShouldNotBeNull();
         found.CustomerContact.ContactName.ShouldBe(new ContactName("Maria Garcia"));
         found.CustomerContact.Phone.ShouldBe(new PhoneNumber("+34 600123123"));
-    }
-
-    [Test]
-    public async Task BackfillBatchAsync_populates_structured_columns_for_pending_rows()
-    {
-        await using var seedConnection = new SqlConnection(_connectionString);
-        await seedConnection.OpenAsync();
-        var seedCommand = seedConnection.CreateCommand();
-        seedCommand.CommandText = """
-            INSERT INTO dbo.customer_contacts
-                (customer_id, contact_name, phone, email)
-            VALUES
-                (2001, 'Maria Garcia', '+34 600123123', 'maria.garcia@example.com');
-            """;
-        await seedCommand.ExecuteNonQueryAsync();
-
-        var processor = new StructuredCustomerContactBackfillProcessor(new DatabaseConnectionFactory(_connectionString));
-
-        var result = await processor.BackfillBatchAsync(batchSize: 100, cancellationToken: CancellationToken.None);
-
-        result.UpdatedRows.ShouldBe(1);
-        result.RemainingRows.ShouldBe(0);
-
-        var readCommand = seedConnection.CreateCommand();
-        readCommand.CommandText = "SELECT first_name, last_name, phone_country_code, phone_local_number FROM dbo.customer_contacts WHERE customer_id = 2001;";
-        await using var reader = await readCommand.ExecuteReaderAsync();
-
-        await reader.ReadAsync();
-        reader.GetString(0).ShouldBe("Maria");
-        reader.GetString(1).ShouldBe("Garcia");
-        reader.GetString(2).ShouldBe("+34");
-        reader.GetString(3).ShouldBe("600123123");
-    }
-
-    [Test]
-    public async Task BackfillBatchAsync_is_idempotent_after_rows_are_backfilled()
-    {
-        await using var seedConnection = new SqlConnection(_connectionString);
-        await seedConnection.OpenAsync();
-        var seedCommand = seedConnection.CreateCommand();
-        seedCommand.CommandText = """
-            INSERT INTO dbo.customer_contacts
-                (customer_id, contact_name, phone, email)
-            VALUES
-                (2002, 'Ada Lovelace', '+44 123456789', 'ada.lovelace@example.com');
-            """;
-        await seedCommand.ExecuteNonQueryAsync();
-
-        var processor = new StructuredCustomerContactBackfillProcessor(new DatabaseConnectionFactory(_connectionString));
-
-        var firstRun = await processor.BackfillBatchAsync(batchSize: 100, cancellationToken: CancellationToken.None);
-        var secondRun = await processor.BackfillBatchAsync(batchSize: 100, cancellationToken: CancellationToken.None);
-
-        firstRun.UpdatedRows.ShouldBe(1);
-        secondRun.UpdatedRows.ShouldBe(0);
-        secondRun.RemainingRows.ShouldBe(0);
-    }
-
-    [Test]
-    public async Task BackfillAllAsync_reports_completed_and_skipped_rows_for_mixed_dataset()
-    {
-        await using var seedConnection = new SqlConnection(_connectionString);
-        await seedConnection.OpenAsync();
-        var seedCommand = seedConnection.CreateCommand();
-        seedCommand.CommandText = """
-            INSERT INTO dbo.customer_contacts
-                (customer_id, contact_name, phone, email, first_name, last_name, phone_country_code, phone_local_number)
-            VALUES
-                (2003, 'Grace Hopper', '+1 2025550101', 'grace.hopper@example.com', NULL, NULL, NULL, NULL),
-                (2004, 'Margaret Hamilton', '+1 2025550102', 'margaret.hamilton@example.com', 'Margaret', 'Hamilton', '+1', '2025550102');
-            """;
-        await seedCommand.ExecuteNonQueryAsync();
-
-        var processor = new StructuredCustomerContactBackfillProcessor(new DatabaseConnectionFactory(_connectionString));
-
-        var result = await processor.BackfillAllAsync(batchSize: 1, cancellationToken: CancellationToken.None);
-
-        result.TotalRows.ShouldBe(2);
-        result.CompletedRows.ShouldBe(1);
-        result.SkippedRows.ShouldBe(1);
     }
 }

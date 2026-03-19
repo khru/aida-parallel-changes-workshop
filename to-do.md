@@ -59,12 +59,14 @@ Baseline accepted AC above remain immutable and must not regress.
 | S-AC-08 | `GET /api/v2/customer-contacts/{customerId}` returns structured contract and expected errors | AT-V2-GET-200-001, AT-V2-GET-400-001, AT-V2-GET-404-001 | done |
 | S-AC-09 | `POST /api/v2/customer-contacts` creates structured contact and preserves compatibility behavior | AT-V2-POST-201-001, AT-V2-POST-400-001, AT-V2-POST-409-001 | done |
 | S-AC-10 | `PUT /api/v2/customer-contacts/{customerId}` updates structured contact and preserves compatibility behavior | AT-V2-PUT-204-001, AT-V2-PUT-400-001, AT-V2-PUT-404-001 | done |
-| S-AC-11 | internal persistence contract removes legacy flat storage while preserving `v1` observable behavior | SI-CONTRACT-DB-001, AT-V1-NONREG-002 | pending |
-| S-AC-12 | solution documentation explains full strategy, ordering, and evidence with executable diagrams | DOC-SOLUTION-001 | pending |
+| S-AC-11 | internal persistence contract removes legacy flat storage while preserving `v1` observable behavior | SI-CONTRACT-DB-001, AT-V1-NONREG-002 | done |
+| S-AC-12 | solution documentation explains full strategy, ordering, and evidence with executable diagrams | DOC-SOLUTION-001, DOC-README-STRUCTURE-001 | done |
 
 ## Solution branch next red test (only one)
 
-- [ ] SI-CONTRACT-DB-001
+- [x] SI-CONTRACT-DB-001
+
+Reason completed: the contracted schema is now covered by `SI-CONTRACT-DB-001`, `v1` non-regression is covered by `AT-V1-NONREG-002`, and solution documentation now includes both `docs/SOLUTION.md` and the README repository structure map.
 
 ## ZOMBIES decomposition
 
