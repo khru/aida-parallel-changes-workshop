@@ -20,6 +20,89 @@ The workshop objective is to evolve a live system incrementally without careless
 - Keep tests, docs, scripts, and HTTP executable documentation aligned.
 - Work with outside-in double-loop TDD and one failing test at a time.
 
+## Repository structure
+
+The workshop keeps a small number of top-level folders so participants can find the runtime, tests, scripts, and executable HTTP docs quickly.
+
+Generated with:
+
+```bash
+tree -L 2 -I 'bin|obj|TestResults|artifacts|StrykerOutput|.git|.idea|.vs|.tools|coverage*.json|Aida.ParallelChange.sln|Directory.Packages.props'
+```
+
+```text
+.
+├── AGENTS.md
+├── README.md
+├── docker
+│   ├── api
+│   ├── ijhttp
+│   └── migrations
+├── docker-compose.yml
+├── docs
+│   ├── DOCUMENTATION.md
+│   ├── FACILITATION.md
+│   ├── INSTRUCTIONS.md
+│   ├── SOLUTION.md
+│   └── adr
+├── global.json
+├── http
+│   ├── create-customer-contact-201.http
+│   ├── create-customer-contact-400.http
+│   ├── create-customer-contact-409.http
+│   ├── create-customer-contact-v2-201.http
+│   ├── create-customer-contact-v2-400.http
+│   ├── create-customer-contact-v2-409.http
+│   ├── get-customer-contact-200.http
+│   ├── get-customer-contact-400.http
+│   ├── get-customer-contact-404.http
+│   ├── get-customer-contact-v2-200.http
+│   ├── get-customer-contact-v2-400.http
+│   ├── get-customer-contact-v2-404.http
+│   ├── health-200.http
+│   ├── http-client.env.json
+│   ├── openapi-v1-200.http
+│   ├── scenario-create-get-update-get.http
+│   ├── update-customer-contact-204.http
+│   ├── update-customer-contact-400.http
+│   ├── update-customer-contact-404.http
+│   ├── update-customer-contact-v2-204.http
+│   ├── update-customer-contact-v2-400.http
+│   └── update-customer-contact-v2-404.http
+├── scripts
+│   ├── check-shell-eol.ps1
+│   ├── check-shell-eol.sh
+│   ├── common.ps1
+│   ├── common.sh
+│   ├── coverage.ps1
+│   ├── coverage.sh
+│   ├── down.ps1
+│   ├── down.sh
+│   ├── migrate.ps1
+│   ├── migrate.sh
+│   ├── mutation.ps1
+│   ├── mutation.sh
+│   ├── restore.ps1
+│   ├── restore.sh
+│   ├── smoke.ps1
+│   ├── smoke.sh
+│   ├── test-integration.ps1
+│   ├── test-integration.sh
+│   ├── test.ps1
+│   ├── test.sh
+│   ├── up.ps1
+│   ├── up.sh
+│   ├── verify.ps1
+│   └── verify.sh
+├── src
+│   ├── Aida.ParallelChange.Api
+│   └── Aida.ParallelChange.Migrator
+├── stryker-config.json
+├── tests
+│   └── Aida.ParallelChange.Api.Tests
+└── to-do.md
+```
+
 ## Architecture (C4)
 
 These diagrams show the current implemented architecture at three levels of detail.
