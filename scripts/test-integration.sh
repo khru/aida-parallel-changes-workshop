@@ -10,6 +10,8 @@ export TESTCONTAINERS_RYUK_DISABLED="${TESTCONTAINERS_RYUK_DISABLED:-true}"
 
 if [[ "${ACT:-false}" == "true" ]] && [[ -z "${TESTCONTAINERS_HOST_OVERRIDE:-}" ]]; then
   export TESTCONTAINERS_HOST_OVERRIDE="host.docker.internal"
+elif [[ "${GITHUB_ACTIONS:-false}" == "true" ]] && [[ "${TESTCONTAINERS_HOST_OVERRIDE:-}" == "host.docker.internal" ]]; then
+  unset TESTCONTAINERS_HOST_OVERRIDE
 fi
 
 dotnet test Aida.ParallelChange.sln -c Release --filter "TestCategory=NarrowIntegration"

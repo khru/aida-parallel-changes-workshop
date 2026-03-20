@@ -84,7 +84,6 @@ jobs:
     if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.scope == 'all' || github.event.inputs.scope == 'integration' }}
     env:
       TESTCONTAINERS_RYUK_DISABLED: true
-      TESTCONTAINERS_HOST_OVERRIDE: host.docker.internal
     steps:
       - name: Checkout
         uses: actions/checkout@v4
